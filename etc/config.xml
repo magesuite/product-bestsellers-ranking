@@ -3,7 +3,7 @@
     <default>
         <bestsellers>
             <cron>
-                <schedule>59 23 * * *</schedule>
+                <enabled>0</enabled>
             </cron>
             <order_status_configuration>
                 <order_statuses>pending,processing,fraud,complete,closed,canceled,holded</order_statuses>

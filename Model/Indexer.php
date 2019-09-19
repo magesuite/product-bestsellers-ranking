@@ -16,13 +16,13 @@ class Indexer
         $this->indexerFactory = $indexerFactory;
     }
 
-    public function reindex()
+    public function invalidate()
     {
         $indexerIds = ['catalog_category_product', 'catalog_product_attribute', 'catalogsearch_fulltext'];
         foreach ($indexerIds as $indexerId) {
             $indexer = $this->indexerFactory->create();
             $indexer->load($indexerId);
-            $indexer->reindexAll();
+            $indexer->invalidate();
         }
     }
 
