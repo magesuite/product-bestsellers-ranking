@@ -10,9 +10,10 @@
             <resource>MageSuite_ProductBestsellersRanking::config_bestsellers</resource>
             <group id="cron" translate="label" type="text" sortOrder="10" showInDefault="1">
                 <label>Cron</label>
-                <field id="schedule" translate="label" type="text" sortOrder="10" showInDefault="1">
-                    <label>Schedule</label>
-                    <comment>Please type full cron schedule expression, eg. '59 23 * * *'</comment>
+                <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1">
+                    <label>Enable Daily Calculation</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>If this option is enabled then cron will recalculate bestsellers at 3:00 AM</comment>
                 </field>
             </group>
             <group id="orders_period" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">

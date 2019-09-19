@@ -4,40 +4,52 @@ namespace MageSuite\ProductBestsellersRanking\Cron;
 class ScoreCalculation
 {
     /**
-     * @var \MageSuite\ProductBestsellersRanking\Model\ScoreCalculation
+     * @var \MageSuite\ProductBestsellersRanking\Model\IndexerFactory
      */
-    protected $scoreCalculation;
-
+    protected $indexerFactory;
     /**
-     * @var \MageSuite\ProductBestsellersRanking\Model\ClearDailyScore
+     * @var \MageSuite\ProductBestsellersRanking\Helper\Configuration
      */
-    private $clearDailyScore;
+    protected $configuration;
     /**
-     * @var \MageSuite\ProductBestsellersRanking\Model\Indexer
+     * @var \MageSuite\ProductBestsellersRanking\Model\ScoreCalculationFactory
      */
-    private $indexer;
+    protected $scoreCalculationFactory;
+    /**
+     * @var \MageSuite\ProductBestsellersRanking\Model\ClearDailyScoreFactory
+     */
+    protected $clearDailyScoreFactory;
 
     /**
      * ScoreCalculation constructor.
-     * @param \MageSuite\ProductBestsellersRanking\Model\ScoreCalculation $scoreCalculation
-     * @param \MageSuite\ProductBestsellersRanking\Model\ClearDailyScore $clearDailyScore
-     * @param \MageSuite\ProductBestsellersRanking\Model\Indexer $indexer
+     *
+     * @param \MageSuite\ProductBestsellersRanking\Model\ScoreCalculationFactory $scoreCalculationFactory
+     * @param \MageSuite\ProductBestsellersRanking\Model\ClearDailyScoreFactory $clearDailyScoreFactory
+     * @param \MageSuite\ProductBestsellersRanking\Model\IndexerFactory $indexerFactory
+     * @param \MageSuite\ProductBestsellersRanking\Helper\Configuration $configuration
      */
     public function __construct(
-        \MageSuite\ProductBestsellersRanking\Model\ScoreCalculation $scoreCalculation,
-        \MageSuite\ProductBestsellersRanking\Model\ClearDailyScore $clearDailyScore,
-        \MageSuite\ProductBestsellersRanking\Model\Indexer $indexer
+        \MageSuite\ProductBestsellersRanking\Model\ScoreCalculationFactory $scoreCalculationFactory,
+        \MageSuite\ProductBestsellersRanking\Model\ClearDailyScoreFactory $clearDailyScoreFactory,
+        \MageSuite\ProductBestsellersRanking\Model\IndexerFactory $indexerFactory,
+        \MageSuite\ProductBestsellersRanking\Helper\Configuration $configuration
     )
     {
-        $this->scoreCalculation = $scoreCalculation;
-        $this->clearDailyScore = $clearDailyScore;
-        $this->indexer = $indexer;
+        $this->scoreCalculationFactory = $scoreCalculationFactory;
+        $this->clearDailyScoreFactory = $clearDailyScoreFactory;
+        $this->indexerFactory = $indexerFactory;
+        $this->configuration = $configuration;
     }
 
     public function execute()
     {
-        $this->clearDailyScore->clearDailyScoring();
-        $this->scoreCalculation->recalculateScore();
-        $this->indexer->reindex();
+        if(!$this->configuration->isDailyCalculationEnabled()){
+            return false;
+        }
+        $this->clearDailyScoreFactory->create()->clearDailyScoring();
+        $this->scoreCalculationFactory->create()->recalculateScore();
+        $this->indexerFactory->create()->invalidate();
+
+        return true;
     }
 }
