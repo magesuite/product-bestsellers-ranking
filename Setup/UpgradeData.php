@@ -223,6 +223,19 @@ class UpgradeData implements \Magento\Framework\Setup\UpgradeDataInterface
             );
         }
 
+        if (version_compare($context->getVersion(), '1.0.0', '<')) {
+            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+
+            foreach(['bestseller_score_by_amount', 'bestseller_score_by_sale', 'bestseller_score_by_turnover'] as $attributeCode) {
+                $eavSetup->updateAttribute(
+                    \Magento\Catalog\Model\Product::ENTITY,
+                    $attributeCode,
+                    ['is_used_for_promo_rules' => 1],
+                    1
+                );
+            }
+        }
+
         $setup->endSetup();
     }
 }
