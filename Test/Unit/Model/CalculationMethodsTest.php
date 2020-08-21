@@ -31,7 +31,7 @@ class CalculationMethodsTest extends \PHPUnit\Framework\TestCase
      */
     private $multiplierDataProvider;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->objectManager = \Magento\TestFramework\ObjectManager::getInstance();
 

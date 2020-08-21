@@ -22,7 +22,7 @@ class CalculationMethodsTest extends \PHPUnit\Framework\TestCase
      */
     private $productRepository;
 
-    public function setUp()
+    public function setUp(): void
     {
         $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
 
