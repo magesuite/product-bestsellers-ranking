@@ -49,7 +49,7 @@ class BoostingFactorDataProvider
             'boosterD' =>
                 [
                     'value' => $scopeConfig->getValue('bestsellers/boosting_factors/boosting_factor_general'),
-                    'max_days_old' => 999999999
+                    'max_days_old' => 36500
                 ]
         ];
     }
