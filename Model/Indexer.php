@@ -9,19 +9,23 @@ class Indexer
      */
     protected $indexerFactory;
 
-    public function __construct(
-        \Magento\Indexer\Model\IndexerFactory $indexerFactory
-    )
+    public function __construct(\Magento\Indexer\Model\IndexerFactory $indexerFactory)
     {
         $this->indexerFactory = $indexerFactory;
     }
 
     public function invalidate()
     {
-        $indexerIds = ['catalog_category_product', 'catalog_product_attribute', 'catalogsearch_fulltext'];
+        $indexerIds = ['catalogsearch_fulltext'];
+
         foreach ($indexerIds as $indexerId) {
             $indexer = $this->indexerFactory->create();
             $indexer->load($indexerId);
+
+            if($indexer->isScheduled()) {
+                continue;
+            }
+
             $indexer->invalidate();
         }
     }
