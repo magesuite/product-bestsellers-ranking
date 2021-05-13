@@ -22,6 +22,11 @@ class CalculationMethodsTest extends \PHPUnit\Framework\TestCase
      */
     private $productRepository;
 
+    /**
+     * @var \Magento\Framework\Api\SearchCriteriaBuilder
+     */
+    private $searchCriteriaBuilder;
+
     public function setUp(): void
     {
         $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
@@ -29,6 +34,7 @@ class CalculationMethodsTest extends \PHPUnit\Framework\TestCase
         $this->scoreCalculationModel = $objectManager->create(\MageSuite\ProductBestsellersRanking\Model\ScoreCalculation::class);
         $this->boostingFactorDataProvider = $objectManager->get(\MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider::class);
         $this->productRepository = $objectManager->create(\Magento\Catalog\Api\ProductRepositoryInterface::class);
+        $this->searchCriteriaBuilder = $objectManager->create(\Magento\Framework\Api\SearchCriteriaBuilder::class);
     }
 
     /**
@@ -65,6 +71,31 @@ class CalculationMethodsTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(2701, $product->getBestsellerScoreByAmount());
         $this->assertEquals(32400001, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(301, $product->getBestsellerScoreBySale());
+    }
+
+    /**
+     * @magentoDbIsolation enabled
+     * @magentoAppIsolation enabled
+     * @magentoDataFixture loadGroupedProducts
+     * @magentoDataFixture loadGroupedOrders
+     */
+    public function testCalculationForBundle()
+    {
+        $scoreCalculationModel = $this->scoreCalculationModel;
+        $this->boostingFactorDataProvider->setBoostingFactors($this->getBoostingFactorArray());
+        $scoreCalculationModel->recalculateScore();
+
+        $indexerRegistry = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()
+            ->create(\Magento\Framework\Indexer\IndexerRegistry::class);
+        $product = $this->productRepository->get('grouped');
+
+        $bestsellerScoreByAmount = [6001, 5101, 4501, 2701];
+        $bestsellerScoreByTurnover = [6000001, 20400001, 27000001, 32400001];
+        $bestsellerScoreBySale = [301, 301, 301, 301];
+
+        $this->assertEquals(array_sum($bestsellerScoreByAmount), $product->getBestsellerScoreByAmount());
+        $this->assertEquals(array_sum($bestsellerScoreByTurnover), $product->getBestsellerScoreByTurnover());
+        $this->assertEquals(array_sum($bestsellerScoreBySale), $product->getBestsellerScoreBySale());
     }
 
     /**
@@ -140,6 +171,14 @@ class CalculationMethodsTest extends \PHPUnit\Framework\TestCase
         include __DIR__.'/../../_files/order.php';
     }
 
+    public static function loadGroupedProducts() {
+        include __DIR__.'/../../_files/product_grouped_with_simple.php';
+    }
+
+    public static function loadGroupedOrders() {
+        include __DIR__.'/../../_files/order_with_grouped_product.php';
+    }
+
     protected function getBoostingFactorArray(){
         return [
             'boosterA' =>
@@ -162,6 +201,80 @@ class CalculationMethodsTest extends \PHPUnit\Framework\TestCase
                     'value' => 0,
                     'max_days_old' => 999999999
                 ]
+        ];
+    }
+
+    protected function getProductMapper()
+    {
+        return [
+            100000 => [
+                'price' => 10,
+            ],
+            200000 => [
+                'price' => 20,
+            ],
+            300000 => [
+                'price' => 30,
+            ],
+            400000 => [
+                'price' => 40,
+            ],
+            500000 => [
+                'price' => 50,
+            ],
+            600000 => [
+                'price' => 60,
+            ],
+            700000 => [
+                'price' => 70,
+            ],
+            800000 => [
+                'price' => 80,
+            ],
+            900000 => [
+                'price' => 90,
+            ],
+            1000000 => [
+                'price' => 100,
+            ],
+            1100000 => [
+                'price' => 110,
+            ],
+            1200000 => [
+                'price' => 120,
+            ],
+            1300000 => [
+                'price' => 130,
+            ],
+            1400000 => [
+                'price' => 140,
+            ],
+            1500000 => [
+                'price' => 150,
+            ],
+            1600000 => [
+                'price' => 160,
+            ],
+            1700000 => [
+                'price' => 170,
+            ],
+            1800000 => [
+                'price' => 180,
+            ],
+            1900000 => [
+                'price' => 190,
+            ],
+            2000000 => [
+                'price' => 200,
+            ],
+            3000000 => [
+                'price' => 200,
+                'multiplier' => 10
+            ],
+            4000000 => [
+                'price' => 200,
+                'qty' => 0
+            ]
         ];
     }
 

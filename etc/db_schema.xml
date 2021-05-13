@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="quote_item">
+        <column xsi:type="int" name="parent_product_id" unsigned="true" nullable="true" identity="false"
+                comment="Parent Product ID"/>
+        <index referenceId="QUOTE_ITEM_PARENT_PRODUCT_ID" indexType="btree">
+            <column name="parent_product_id"/>
+        </index>
+    </table>
+    <table name="sales_order_item">
+        <column xsi:type="int" name="parent_product_id" unsigned="true" nullable="true" identity="false"
+                comment="Parent Product ID"/>
+        <index referenceId="SALES_ORDER_ITEM_PARENT_PRODUCT_ID" indexType="btree">
+            <column name="parent_product_id"/>
+        </index>
+    </table>
+</schema>

@@ -1,0 +1,5 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:Event/etc/events.xsd">
+    <event name="sales_quote_add_item">
+        <observer name="add_parent_product_id_from_buy_request_to_quote_item" instance="MageSuite\ProductBestsellersRanking\Observer\AddParentProductIdFromBuyRequestToQuoteItem"/>
+    </event>
+</config>
