@@ -88,6 +88,21 @@ class ScoreCalculation
      */
     protected $maxScores = [];
 
+    /**
+     * @var \Magento\GroupedProduct\Model\ResourceModel\Product\Link
+     */
+    protected $productLink;
+
+    /**
+     * @var \Magento\Sales\Api\OrderItemRepositoryInterface
+     */
+    protected $orderItemRepository;
+
+    /**
+     * @var \Magento\Framework\Api\SearchCriteriaBuilder
+     */
+    protected $searchCriteriaBuilder;
+
     public function __construct(
         \Magento\Framework\App\ResourceConnection $resourceConnection,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
@@ -100,9 +115,10 @@ class ScoreCalculation
         \MageSuite\ProductBestsellersRanking\DataProviders\MultiplierDataProvider $multiplierDataProvider,
         \MageSuite\ProductBestsellersRanking\Repository\OrderItemsCollection $ordersItemsCollection,
         \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory,
-        \Magento\Eav\Model\ResourceModel\Entity\Attribute $eavAttribute
-    )
-    {
+        \Magento\Eav\Model\ResourceModel\Entity\Attribute $eavAttribute,
+        \Magento\Sales\Api\OrderItemRepositoryInterface $orderItemRepository,
+        \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
+    ) {
         $this->resourceConnection = $resourceConnection;
         $this->scopeConfig = $scopeConfig;
         $this->storeManager = $storeManager;
@@ -115,6 +131,8 @@ class ScoreCalculation
         $this->ordersItemsCollection = $ordersItemsCollection;
         $this->productCollectionFactory = $productCollectionFactory;
         $this->eavAttribute = $eavAttribute;
+        $this->orderItemRepository = $orderItemRepository;
+        $this->searchCriteriaBuilder = $searchCriteriaBuilder;
         $this->maxScores = [
             'bestseller_score_by_amount' => 0,
             'bestseller_score_by_turnover' => 0,
@@ -151,7 +169,16 @@ class ScoreCalculation
             $multiplier = $multiplier === null ? 100 : $multiplier;
             $price = $product->getPrice();
             $productId = $product->getId();
-            $this->buildSelectForProduct($productId, $price, $multiplier, $soldOutFactor);
+
+            if ($product->getTypeId() === \Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE) {
+                $this->buildSelectForGroupedProduct($productId, $soldOutFactor);
+            } else {
+                $updatedBestsellerScores = $this->buildSelectForProduct($productId, $price, $multiplier, $soldOutFactor);
+
+                if (!empty($updatedBestsellerScores)) {
+                    $this->updateBestsellerScores($productId, $updatedBestsellerScores);
+                }
+            }
         }
 
         if ($this->sortOrder == 'desc') {
@@ -175,12 +202,40 @@ class ScoreCalculation
         }
     }
 
-    public function buildSelectForProduct($productId, $price, $multiplier, $soldOutFactor)
+    public function buildSelectForProduct($productId, $price, $multiplier, $soldOutFactor, $parentProductId = null): array
     {
-        $this->buildQueryByPeriodBooster($productId, $price, $multiplier, $soldOutFactor);
+        return $this->buildQueryByPeriodBooster($productId, $price, $multiplier, $soldOutFactor, $parentProductId);
     }
 
-    public function getBaseQuery($productId)
+    public function buildSelectForGroupedProduct($productId, $soldOutFactor): array
+    {
+        $this->searchCriteriaBuilder->addFilter('parent_product_id', $productId);
+        $this->searchCriteriaBuilder->addFilter('store_id', $this->storeId);
+        $searchCriteria = $this->searchCriteriaBuilder->create();
+        $childItems = $this->orderItemRepository->getList($searchCriteria);
+
+        $itemIds = array_map(function ($item) {
+            return $item->getItemId();
+        }, $childItems->getItems());
+
+        if (empty($itemIds)) {
+            return [];
+        }
+
+        $childrenBestsellerScores = [];
+        foreach ($childItems as $item) {
+            $multiplier = $this->productResource->getAttributeRawValue($item->getProductId(), 'bestseller_score_multiplier', $this->storeId);
+            $multiplier = $multiplier === null ? 100 : $multiplier;
+
+            $bestsellerScores = $this->buildSelectForProduct($item->getProductId(), $item->getPrice(), $multiplier, $soldOutFactor, $productId);
+            $childrenBestsellerScores[$item->getId()] = $bestsellerScores;
+        }
+        $this->updateBestsellerScoresForBundle($productId, $childrenBestsellerScores);
+
+        return $itemIds;
+    }
+
+    public function getBaseQuery($productId, $parentProductId = null)
     {
         $resource = $this->resourceConnection;
         $connection = $resource->getConnection();
@@ -194,9 +249,14 @@ class ScoreCalculation
                 'qty_ordered',
                 'product_id',
                 'created_at'
-            ])
-            ->where($tableName . '.product_id = ?', $productId)
-            ->join($stockTableName, $stockTableName . '.product_id = ' . $productId, $stockTableName . '.qty');
+            ]);
+        $sql->where($tableName . '.product_id = ?', $productId);
+        if ($parentProductId !== null) {
+            $sql->where($tableName . '.parent_product_id = ?', $parentProductId);
+        } else {
+            $sql->where($tableName . '.parent_product_id IS NULL');
+        }
+        $sql->join($stockTableName, $stockTableName . '.product_id = ' . $productId, $stockTableName . '.qty');
 
         if($this->periodFilter->getOrdersPeriodFilter()) {
             $sql->where("created_at >= '".$this->periodFilter->getOrdersPeriodFilter()."'");
@@ -205,7 +265,7 @@ class ScoreCalculation
         return $sql;
     }
 
-    public function buildQueryByPeriodBooster($productId, $price, $multiplier, $soldOutFactor)
+    public function buildQueryByPeriodBooster($productId, $price, $multiplier, $soldOutFactor, $parentProductId = null): array
     {
         $days = 0;
 
@@ -219,8 +279,9 @@ class ScoreCalculation
             $this->storeId
         );
 
+        $bestsellerScores = [];
         foreach($this->boostingFactorDataProvider->getBoostingFactors() as $period) {
-            $periodSql = $this->getBaseQuery($productId);
+            $periodSql = $this->getBaseQuery($productId, $parentProductId);
             $from = date('Y-m-d 00:00:00', strtotime('-'.$period['max_days_old'].' days'));
             $to = date('Y-m-d 23:59:59', strtotime('-'.$days.' days'));
 
@@ -274,16 +335,51 @@ class ScoreCalculation
                     $this->maxScores['bestseller_score_by_sale'] = $updatedSalesScore;
                 }
 
-                $this->productResourceAction->updateAttributes(
-                    [$result['product_id']],
-                    [
-                        'bestseller_score_by_amount' => $updatedAmountScore,
-                        'bestseller_score_by_turnover' => $updatedTurnoverScore,
-                        'bestseller_score_by_sale' => $updatedSalesScore
-                    ],
-                    $this->storeId
-                );
+                $bestsellerScores[$result['product_id']] = [
+                    'bestseller_score_by_amount' => $updatedAmountScore,
+                    'bestseller_score_by_turnover' => $updatedTurnoverScore,
+                    'bestseller_score_by_sale' => $updatedSalesScore
+                ];
             }
         }
+        return $bestsellerScores;
+    }
+
+    protected function updateBestsellerScores($productId, $bestsellerScores)
+    {
+        foreach ($bestsellerScores as $scores) {
+            if (empty($scores)) {
+                continue;
+            }
+            $this->productResourceAction->updateAttributes(
+                [$productId],
+                $scores,
+                $this->storeId
+            );
+        }
+    }
+
+    protected function updateBestsellerScoresForBundle($productId, $bestsellerScores)
+    {
+        $bestsellerScoresSum = [
+            'bestseller_score_by_amount' => 0,
+            'bestseller_score_by_turnover' => 0,
+            'bestseller_score_by_sale' => 0
+        ];
+        foreach ($bestsellerScores as $scores) {
+            if (empty($scores)) {
+                continue;
+            }
+            $scores = reset($scores);
+            array_walk($bestsellerScoresSum, function (&$value, $key) use ($scores) {
+                $value += (int) $scores[$key];
+            });
+        }
+
+        $this->productResourceAction->updateAttributes(
+            [$productId],
+            $bestsellerScoresSum,
+            $this->storeId
+        );
     }
 }

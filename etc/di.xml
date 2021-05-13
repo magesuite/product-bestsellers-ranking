@@ -8,4 +8,12 @@
             </argument>
         </arguments>
     </type>
+    <type name="Magento\Checkout\Controller\Cart\Add">
+        <plugin name="add_parent_product_id_to_request_params"
+                type="MageSuite\ProductBestsellersRanking\Plugin\Controller\Cart\Add\AddParentProductIdToRequestParams"/>
+    </type>
+    <type name="Magento\Quote\Model\Quote\Item\ToOrderItem">
+        <plugin name="copy_parent_product_id_to_order_item"
+                type="MageSuite\ProductBestsellersRanking\Plugin\Quote\Model\Quote\Item\ToOrderItem\CopyParentProductIdToOrderItem"/>
+    </type>
 </config>

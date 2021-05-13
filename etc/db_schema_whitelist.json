@@ -1,0 +1,7 @@
+{
+    "sales_order_item": {
+        "column": {
+            "parent_product_id": true
+        }
+    }
+}
