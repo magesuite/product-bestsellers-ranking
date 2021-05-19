@@ -16,4 +16,14 @@
         <plugin name="copy_parent_product_id_to_order_item"
                 type="MageSuite\ProductBestsellersRanking\Plugin\Quote\Model\Quote\Item\ToOrderItem\CopyParentProductIdToOrderItem"/>
     </type>
+
+    <type name="Smile\ElasticsuiteCore\Index\DataSourceResolver">
+        <arguments>
+            <argument name="datasources" xsi:type="array">
+                <item name="catalog_product" xsi:type="array">
+                    <item name="bestseller_score" xsi:type="object">MageSuite\ProductBestsellersRanking\Model\Product\Indexer\Fulltext\Datasource\BestsellerScoreData</item>
+                </item>
+            </argument>
+        </arguments>
+    </type>
 </config>
