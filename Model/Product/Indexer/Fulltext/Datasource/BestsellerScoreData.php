@@ -18,7 +18,7 @@ class BestsellerScoreData implements \Smile\ElasticsuiteCore\Api\Index\Datasourc
             }
 
             foreach (self::BESTSELLER_SCORE_ATTRIBUTES as $bestsellerScoreAttributeCode) {
-                if (!is_array($productData[$bestsellerScoreAttributeCode])) {
+                if (!isset($productData[$bestsellerScoreAttributeCode]) || !is_array($productData[$bestsellerScoreAttributeCode])) {
                     continue;
                 }
 
