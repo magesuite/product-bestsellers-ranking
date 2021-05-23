@@ -230,7 +230,7 @@ class ScoreCalculation
             $bestsellerScores = $this->buildSelectForProduct($item->getProductId(), $item->getPrice(), $multiplier, $soldOutFactor, $productId);
             $childrenBestsellerScores[$item->getId()] = $bestsellerScores;
         }
-        $this->updateBestsellerScoresForBundle($productId, $childrenBestsellerScores);
+        $this->updateBestsellerScoresForGroupedProduct($productId, $childrenBestsellerScores);
 
         return $itemIds;
     }
@@ -359,7 +359,7 @@ class ScoreCalculation
         }
     }
 
-    protected function updateBestsellerScoresForBundle($productId, $bestsellerScores)
+    protected function updateBestsellerScoresForGroupedProduct($productId, $bestsellerScores)
     {
         $bestsellerScoresSum = [
             'bestseller_score_by_amount' => 0,
