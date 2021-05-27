@@ -79,7 +79,7 @@ class CalculationMethodsTest extends \PHPUnit\Framework\TestCase
      * @magentoDataFixture loadGroupedProducts
      * @magentoDataFixture loadGroupedOrders
      */
-    public function testCalculationForBundle()
+    public function testCalculationForGroupedProduct()
     {
         $scoreCalculationModel = $this->scoreCalculationModel;
         $this->boostingFactorDataProvider->setBoostingFactors($this->getBoostingFactorArray());

@@ -67,7 +67,7 @@ foreach ($productMapper as $id => $data) {
 /** @var $product \Magento\Catalog\Model\Product */
 $groupedProduct = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()->create(\Magento\Catalog\Model\Product::class);
 
-$product->setTypeId(\Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE)
+$groupedProduct->setTypeId(\Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE)
     ->setId(13)
     ->setWebsiteIds([1])
     ->setAttributeSetId(4)
@@ -83,7 +83,7 @@ $product->setTypeId(\Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_COD
 foreach ($linkedProducts as $linkedProduct) {
     /** @var \Magento\Catalog\Api\Data\ProductLinkInterface $productLink */
     $productLink = $productLinkFactory->create();
-    $productLink->setSku($product->getSku())
+    $productLink->setSku($groupedProduct->getSku())
         ->setLinkType('associated')
         ->setLinkedProductSku($linkedProduct->getSku())
         ->setLinkedProductType($linkedProduct->getTypeId())
@@ -94,4 +94,4 @@ foreach ($linkedProducts as $linkedProduct) {
 
 $product->setProductLinks($newLinks);
 
-$productRepository->save($product);
+$productRepository->save($groupedProduct);
