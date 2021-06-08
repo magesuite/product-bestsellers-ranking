@@ -13,7 +13,15 @@
                 <field id="enabled" translate="label" type="select" sortOrder="10" showInDefault="1">
                     <label>Enable Daily Calculation</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
-                    <comment>If this option is enabled then cron will recalculate bestsellers at 3:00 AM</comment>
+                    <comment>If this option is enabled then cron will recalculate bestsellers</comment>
+                </field>
+                <field id="recalculation_schedule" translate="label" type="text" sortOrder="20" showInDefault="1">
+                    <label>Recalculation Cron Schedule</label>
+                    <comment>Schedule expression for bestsellers recalculation cron (format: * * * * *)</comment>
+                    <depends>
+                        <field id="bestsellers/cron/enabled">1</field>
+                    </depends>
+
                 </field>
             </group>
             <group id="orders_period" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
