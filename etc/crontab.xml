@@ -2,7 +2,7 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Cron:etc/crontab.xsd">
     <group id="default">
         <job name="bestseller_score_calculation" instance="MageSuite\ProductBestsellersRanking\Cron\ScoreCalculation" method="execute">
-            <schedule>0 3 * * *</schedule>
+            <config_path>bestsellers/cron/recalculation_schedule</config_path>
         </job>
     </group>
 </config>

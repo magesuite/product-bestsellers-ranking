@@ -4,6 +4,7 @@
         <bestsellers>
             <cron>
                 <enabled>0</enabled>
+                <recalculation_schedule>0 3 * * *</recalculation_schedule>
             </cron>
             <order_status_configuration>
                 <order_statuses>pending,processing,fraud,complete,closed,canceled,holded</order_statuses>
