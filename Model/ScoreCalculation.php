@@ -4,15 +4,11 @@ namespace MageSuite\ProductBestsellersRanking\Model;
 
 class ScoreCalculation
 {
-    private $orderStatuses;
-
     private $boostingFactors;
 
     private $storeId;
 
     private $ordersPeriodFilter;
-
-    private $currentOrderCreatedAt;
 
     protected $productsScoreArray = [];
 
@@ -152,7 +148,6 @@ class ScoreCalculation
     {
         $this->applyParameters();
         $this->calculateProductRating();
-
     }
     public function calculateProductRating()
     {
@@ -254,11 +249,11 @@ class ScoreCalculation
         if ($parentProductId !== null) {
             $sql->where($tableName . '.parent_product_id = ?', $parentProductId);
         } else {
-            $sql->where($tableName . '.parent_product_id IS NULL');
+            $sql->where($tableName . '.parent_product_id IS NULL || '. $tableName . '.parent_product_id = ' . $tableName . '.product_id');
         }
         $sql->join($stockTableName, $stockTableName . '.product_id = ' . $productId, $stockTableName . '.qty');
 
-        if($this->periodFilter->getOrdersPeriodFilter()) {
+        if ($this->periodFilter->getOrdersPeriodFilter()) {
             $sql->where("created_at >= '".$this->periodFilter->getOrdersPeriodFilter()."'");
         }
 
@@ -297,31 +292,15 @@ class ScoreCalculation
             $connection = $resource->getConnection();
             $result = $connection->fetchRow($periodSql);
 
-            if($result) {
-                $amountScore = $this->productResource->getAttributeRawValue($result['product_id'], 'bestseller_score_by_amount', $this->storeId);
-                $turnoverScore = $this->productResource->getAttributeRawValue($result['product_id'], 'bestseller_score_by_turnover', $this->storeId);
-                $salesScore = $this->productResource->getAttributeRawValue($result['product_id'], 'bestseller_score_by_sale', $this->storeId);
-
+            if ($result) {
                 $qtyMultiplier = 1;
                 if (isset($result['qty']) && floatval($result['qty']) == 0) {
                     $qtyMultiplier = $soldOutFactor;
                 }
 
-                if(!$amountScore){
-                    $amountScore = 1;
-                }
-
-                if(!$turnoverScore){
-                    $turnoverScore = 1;
-                }
-
-                if(!$salesScore){
-                    $salesScore = 1;
-                }
-
-                $updatedAmountScore = $amountScore + round($result['sum_qty_ordered'] * $period['value'] * $multiplier * $qtyMultiplier);
-                $updatedTurnoverScore = $turnoverScore + round($result['sum_qty_ordered'] * $price * $period['value'] * 100 * $multiplier * $qtyMultiplier);
-                $updatedSalesScore = $salesScore + round($result['count_ordered'] * $period['value'] * $multiplier * $qtyMultiplier);
+                $updatedAmountScore = 1 + round($result['sum_qty_ordered'] * $period['value'] * $multiplier * $qtyMultiplier);
+                $updatedTurnoverScore = 1 + round($result['sum_qty_ordered'] * $price * $period['value'] * 100 * $multiplier * $qtyMultiplier);
+                $updatedSalesScore = 1 + round($result['count_ordered'] * $period['value'] * $multiplier * $qtyMultiplier);
 
                 if ($this->maxScores['bestseller_score_by_amount'] < $updatedAmountScore) {
                     $this->maxScores['bestseller_score_by_amount'] = $updatedAmountScore;
@@ -335,11 +314,17 @@ class ScoreCalculation
                     $this->maxScores['bestseller_score_by_sale'] = $updatedSalesScore;
                 }
 
-                $bestsellerScores[$result['product_id']] = [
-                    'bestseller_score_by_amount' => $updatedAmountScore,
-                    'bestseller_score_by_turnover' => $updatedTurnoverScore,
-                    'bestseller_score_by_sale' => $updatedSalesScore
-                ];
+                if (!isset($bestsellerScores[$result['product_id']])) {
+                    $bestsellerScores[$result['product_id']] = [
+                        'bestseller_score_by_amount' => 0,
+                        'bestseller_score_by_turnover' => 0,
+                        'bestseller_score_by_sale' => 0
+                    ];
+                }
+
+                $bestsellerScores[$result['product_id']]['bestseller_score_by_amount'] += $updatedAmountScore;
+                $bestsellerScores[$result['product_id']]['bestseller_score_by_turnover'] += $updatedTurnoverScore;
+                $bestsellerScores[$result['product_id']]['bestseller_score_by_sale'] += $updatedSalesScore;
             }
         }
         return $bestsellerScores;
