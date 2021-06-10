@@ -20,6 +20,11 @@ class ScoreCalculation
     protected $resourceConnection;
 
     /**
+     * @var \Magento\Framework\DB\Adapter\AdapterInterface
+     */
+    protected $connection;
+
+    /**
      * @var \Magento\Framework\App\Config\ScopeConfigInterface
      */
     protected $scopeConfig;
@@ -144,8 +149,10 @@ class ScoreCalculation
         $this->sortOrder = $this->scopeConfig->getValue('bestsellers/sorting/direction', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
-    public function recalculateScore()
+    public function recalculateScore(\Magento\Framework\DB\Adapter\AdapterInterface $connection = null)
     {
+        $this->connection = $connection ?: $this->resourceConnection->getConnection();
+
         $this->applyParameters();
         $this->calculateProductRating();
     }
@@ -177,21 +184,20 @@ class ScoreCalculation
         }
 
         if ($this->sortOrder == 'desc') {
-            $connection = $this->resourceConnection->getConnection();
-            $table = $connection->getTableName('catalog_product_entity_int');
+            $table = $this->connection->getTableName('catalog_product_entity_int');
             $amountScoreAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'bestseller_score_by_amount');
             $turnoverScoreAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'bestseller_score_by_turnover');
             $saleScoreAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'bestseller_score_by_sale');
 
-            $sql = $connection->update($table, [
+            $this->connection->update($table, [
                 'value' => new \Zend_Db_Expr($this->maxScores['bestseller_score_by_amount'] + 1 . ' - value'),
             ], ['attribute_id = ?' => $amountScoreAttributeId]);
 
-            $sql = $connection->update($table, [
+            $this->connection->update($table, [
                 'value' => new \Zend_Db_Expr($this->maxScores['bestseller_score_by_turnover'] + 1 . ' - value'),
             ], ['attribute_id = ?' => $turnoverScoreAttributeId]);
 
-            $sql = $connection->update($table, [
+            $this->connection->update($table, [
                 'value' => new \Zend_Db_Expr($this->maxScores['bestseller_score_by_sale'] + 1 . ' - value'),
             ], ['attribute_id = ?' => $saleScoreAttributeId]);
         }
@@ -232,12 +238,10 @@ class ScoreCalculation
 
     public function getBaseQuery($productId, $parentProductId = null)
     {
-        $resource = $this->resourceConnection;
-        $connection = $resource->getConnection();
-        $tableName = $resource->getTableName('sales_order_item');
-        $stockTableName = $resource->getTableName('cataloginventory_stock_item');
+        $tableName = $this->resourceConnection->getTableName('sales_order_item');
+        $stockTableName = $this->resourceConnection->getTableName('cataloginventory_stock_item');
 
-        $sql = $connection
+        $sql = $this->connection
             ->select()
             ->from($tableName, [
                 'item_id',
@@ -288,10 +292,7 @@ class ScoreCalculation
             $periodSql->columns('COUNT(`sales_order_item`.product_id) AS count_ordered')
                 ->group('product_id');
 
-            $resource = $this->resourceConnection;
-            $connection = $resource->getConnection();
-            $result = $connection->fetchRow($periodSql);
-
+            $result = $this->connection->fetchRow($periodSql);
             if ($result) {
                 $qtyMultiplier = 1;
                 if (isset($result['qty']) && floatval($result['qty']) == 0) {

@@ -24,11 +24,10 @@ class ClearDailyScore
         $this->eavAttribute = $eavAttribute;
     }
 
-    public function clearDailyScoring()
+    public function clearDailyScoring(\Magento\Framework\DB\Adapter\AdapterInterface $connection = null)
     {
-        $resource = $this->resourceConnection;
-        $connection = $resource->getConnection();
-        $tableName = $resource->getTableName('catalog_product_entity_int');
+        $connection = $connection ?: $this->resourceConnection->getConnection();
+        $tableName = $this->resourceConnection->getTableName('catalog_product_entity_int');
         $bestsellerScoreByAmountAttribute = $this->eavAttribute->getIdByCode('catalog_product', 'bestseller_score_by_amount');
         $bestsellerScoreByTurnoverAttribute = $this->eavAttribute->getIdByCode('catalog_product', 'bestseller_score_by_turnover');
         $bestsellerScoreBySalesAttribute = $this->eavAttribute->getIdByCode('catalog_product', 'bestseller_score_by_sale');
