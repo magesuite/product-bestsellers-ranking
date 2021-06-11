@@ -10,7 +10,7 @@ $productLinkFactory = \Magento\TestFramework\Helper\Bootstrap::getObjectManager(
     ->get(\Magento\Catalog\Api\Data\ProductLinkInterfaceFactory::class);
 
 foreach ($productMapper as $id => $data) {
-    if (!in_array($id, [100000, 400000, 600000, 1200000])) {
+    if (!in_array($id, [100000, 200000, 300000, 500000])) {
         continue;
     }
     /** @var $product \Magento\Catalog\Model\Product */
