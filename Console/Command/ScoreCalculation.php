@@ -9,26 +9,26 @@ class ScoreCalculation extends \Symfony\Component\Console\Command\Command
     private $state;
 
     /**
-     * @var \MageSuite\ProductBestsellersRanking\Model\ScoreCalculationFactory
-     */
-    protected $scoreCalculationFactory;
-
-    /**
      * @var \Magento\Framework\Config\ScopeInterface $scope
      */
     protected $scope;
 
+    /**
+     * @var \MageSuite\ProductBestsellersRanking\Service\ScoreManager
+     */
+    protected $scoreManager;
+
     public function __construct(
         \Magento\Framework\App\State $state,
         \Magento\Framework\Config\ScopeInterface $scope,
-        \MageSuite\ProductBestsellersRanking\Model\ScoreCalculationFactory $scoreCalculationFactory
+        \MageSuite\ProductBestsellersRanking\Service\ScoreManager $scoreManager
     )
     {
         parent::__construct();
 
         $this->state = $state;
-        $this->scoreCalculationFactory = $scoreCalculationFactory;
         $this->scope = $scope;
+        $this->scoreManager = $scoreManager;
     }
 
     protected function configure()
@@ -45,8 +45,6 @@ class ScoreCalculation extends \Symfony\Component\Console\Command\Command
             $this->state->setAreaCode('frontend');
         }
 
-        $scoreCalculation = $this->scoreCalculationFactory->create();
-
-        $scoreCalculation->recalculateScore();
+        $this->scoreManager->recalculateScores();
     }
 }

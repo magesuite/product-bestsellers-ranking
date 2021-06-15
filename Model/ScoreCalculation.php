@@ -149,13 +149,14 @@ class ScoreCalculation
         $this->sortOrder = $this->scopeConfig->getValue('bestsellers/sorting/direction', \Magento\Store\Model\ScopeInterface::SCOPE_STORE);
     }
 
-    public function recalculateScore(\Magento\Framework\DB\Adapter\AdapterInterface $connection = null)
+    public function recalculateScore()
     {
-        $this->connection = $connection ?: $this->resourceConnection->getConnection();
+        $this->connection = $this->resourceConnection->getConnection();
 
         $this->applyParameters();
         $this->calculateProductRating();
     }
+
     public function calculateProductRating()
     {
         $productsCollection = $this->productCollectionFactory->create();
