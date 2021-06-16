@@ -20,19 +20,27 @@ class ScoreManager
     protected $scoreCalculationFactory;
 
     /**
+     * @var \MageSuite\ProductBestsellersRanking\Model\IndexerFactory
+     */
+    protected $indexerFactory;
+
+    /**
      * @var \Psr\Log\LoggerInterface
      */
     protected $logger;
+
 
     public function __construct(
         \Magento\Framework\App\ResourceConnection $resourceConnection,
         \MageSuite\ProductBestsellersRanking\Model\ClearDailyScoreFactory $clearDailyScoreFactory,
         \MageSuite\ProductBestsellersRanking\Model\ScoreCalculationFactory $scoreCalculationFactory,
+        \MageSuite\ProductBestsellersRanking\Model\IndexerFactory $indexerFactory,
         \Psr\Log\LoggerInterface $logger
     ) {
         $this->resourceConnection = $resourceConnection;
         $this->clearDailyScoreFactory = $clearDailyScoreFactory;
         $this->scoreCalculationFactory = $scoreCalculationFactory;
+        $this->indexerFactory = $indexerFactory;
         $this->logger = $logger;
     }
 
@@ -44,6 +52,7 @@ class ScoreManager
         try {
             $this->clearDailyScoreFactory->create()->clearDailyScoring();
             $this->scoreCalculationFactory->create()->recalculateScore();
+            $this->indexerFactory->create()->invalidate();
             $connection->commit();
         } catch (\Exception | \Error $exception) {
             $this->logger->critical(sprintf(
