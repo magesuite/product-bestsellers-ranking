@@ -6,7 +6,7 @@ $addressData = include __DIR__ . '/address_data.php';
 $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
 
 foreach ($orderMapper as $incrementId => $orderData) {
-    if (!in_array($orderData['product_id'], [100000, 400000, 600000, 1200000])) {
+    if (!in_array($orderData['product_id'], [100000, 200000, 300000, 500000])) {
         continue;
     }
     $billingAddress = $objectManager->create(\Magento\Sales\Model\Order\Address::class, ['data' => $addressData]);

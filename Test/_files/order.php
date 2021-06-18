@@ -8,8 +8,9 @@ require __DIR__ . '/../_files/order_mapper.php';
 $addressData = include __DIR__ . '/address_data.php';
 
 $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-$date = new \DateTime();
 foreach ($orderMapper as $incrementId => $orderData) {
+    $date = new \DateTime();
+    $date->sub(new DateInterval('P' . $orderData['days_ago'] . 'D'));
     $billingAddress = $objectManager->create('Magento\Sales\Model\Order\Address', ['data' => $addressData]);
     $billingAddress->setAddressType('billing');
 

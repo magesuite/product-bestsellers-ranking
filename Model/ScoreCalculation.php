@@ -4,15 +4,11 @@ namespace MageSuite\ProductBestsellersRanking\Model;
 
 class ScoreCalculation
 {
-    private $orderStatuses;
-
     private $boostingFactors;
 
     private $storeId;
 
     private $ordersPeriodFilter;
-
-    private $currentOrderCreatedAt;
 
     protected $productsScoreArray = [];
 
@@ -22,6 +18,11 @@ class ScoreCalculation
      * @var \Magento\Framework\App\ResourceConnection
      */
     protected $resourceConnection;
+
+    /**
+     * @var \Magento\Framework\DB\Adapter\AdapterInterface
+     */
+    protected $connection;
 
     /**
      * @var \Magento\Framework\App\Config\ScopeConfigInterface
@@ -150,10 +151,12 @@ class ScoreCalculation
 
     public function recalculateScore()
     {
+        $this->connection = $this->resourceConnection->getConnection();
+
         $this->applyParameters();
         $this->calculateProductRating();
-
     }
+
     public function calculateProductRating()
     {
         $productsCollection = $this->productCollectionFactory->create();
@@ -182,21 +185,20 @@ class ScoreCalculation
         }
 
         if ($this->sortOrder == 'desc') {
-            $connection = $this->resourceConnection->getConnection();
-            $table = $connection->getTableName('catalog_product_entity_int');
+            $table = $this->connection->getTableName('catalog_product_entity_int');
             $amountScoreAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'bestseller_score_by_amount');
             $turnoverScoreAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'bestseller_score_by_turnover');
             $saleScoreAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'bestseller_score_by_sale');
 
-            $sql = $connection->update($table, [
+            $this->connection->update($table, [
                 'value' => new \Zend_Db_Expr($this->maxScores['bestseller_score_by_amount'] + 1 . ' - value'),
             ], ['attribute_id = ?' => $amountScoreAttributeId]);
 
-            $sql = $connection->update($table, [
+            $this->connection->update($table, [
                 'value' => new \Zend_Db_Expr($this->maxScores['bestseller_score_by_turnover'] + 1 . ' - value'),
             ], ['attribute_id = ?' => $turnoverScoreAttributeId]);
 
-            $sql = $connection->update($table, [
+            $this->connection->update($table, [
                 'value' => new \Zend_Db_Expr($this->maxScores['bestseller_score_by_sale'] + 1 . ' - value'),
             ], ['attribute_id = ?' => $saleScoreAttributeId]);
         }
@@ -237,12 +239,10 @@ class ScoreCalculation
 
     public function getBaseQuery($productId, $parentProductId = null)
     {
-        $resource = $this->resourceConnection;
-        $connection = $resource->getConnection();
-        $tableName = $resource->getTableName('sales_order_item');
-        $stockTableName = $resource->getTableName('cataloginventory_stock_item');
+        $tableName = $this->resourceConnection->getTableName('sales_order_item');
+        $stockTableName = $this->resourceConnection->getTableName('cataloginventory_stock_item');
 
-        $sql = $connection
+        $sql = $this->connection
             ->select()
             ->from($tableName, [
                 'item_id',
@@ -254,11 +254,11 @@ class ScoreCalculation
         if ($parentProductId !== null) {
             $sql->where($tableName . '.parent_product_id = ?', $parentProductId);
         } else {
-            $sql->where($tableName . '.parent_product_id IS NULL');
+            $sql->where($tableName . '.parent_product_id IS NULL || '. $tableName . '.parent_product_id = ' . $tableName . '.product_id');
         }
         $sql->join($stockTableName, $stockTableName . '.product_id = ' . $productId, $stockTableName . '.qty');
 
-        if($this->periodFilter->getOrdersPeriodFilter()) {
+        if ($this->periodFilter->getOrdersPeriodFilter()) {
             $sql->where("created_at >= '".$this->periodFilter->getOrdersPeriodFilter()."'");
         }
 
@@ -293,35 +293,16 @@ class ScoreCalculation
             $periodSql->columns('COUNT(`sales_order_item`.product_id) AS count_ordered')
                 ->group('product_id');
 
-            $resource = $this->resourceConnection;
-            $connection = $resource->getConnection();
-            $result = $connection->fetchRow($periodSql);
-
-            if($result) {
-                $amountScore = $this->productResource->getAttributeRawValue($result['product_id'], 'bestseller_score_by_amount', $this->storeId);
-                $turnoverScore = $this->productResource->getAttributeRawValue($result['product_id'], 'bestseller_score_by_turnover', $this->storeId);
-                $salesScore = $this->productResource->getAttributeRawValue($result['product_id'], 'bestseller_score_by_sale', $this->storeId);
-
+            $result = $this->connection->fetchRow($periodSql);
+            if ($result) {
                 $qtyMultiplier = 1;
                 if (isset($result['qty']) && floatval($result['qty']) == 0) {
                     $qtyMultiplier = $soldOutFactor;
                 }
 
-                if(!$amountScore){
-                    $amountScore = 1;
-                }
-
-                if(!$turnoverScore){
-                    $turnoverScore = 1;
-                }
-
-                if(!$salesScore){
-                    $salesScore = 1;
-                }
-
-                $updatedAmountScore = $amountScore + round($result['sum_qty_ordered'] * $period['value'] * $multiplier * $qtyMultiplier);
-                $updatedTurnoverScore = $turnoverScore + round($result['sum_qty_ordered'] * $price * $period['value'] * 100 * $multiplier * $qtyMultiplier);
-                $updatedSalesScore = $salesScore + round($result['count_ordered'] * $period['value'] * $multiplier * $qtyMultiplier);
+                $updatedAmountScore = 1 + round($result['sum_qty_ordered'] * $period['value'] * $multiplier * $qtyMultiplier);
+                $updatedTurnoverScore = 1 + round($result['sum_qty_ordered'] * $price * $period['value'] * 100 * $multiplier * $qtyMultiplier);
+                $updatedSalesScore = 1 + round($result['count_ordered'] * $period['value'] * $multiplier * $qtyMultiplier);
 
                 if ($this->maxScores['bestseller_score_by_amount'] < $updatedAmountScore) {
                     $this->maxScores['bestseller_score_by_amount'] = $updatedAmountScore;
@@ -335,11 +316,17 @@ class ScoreCalculation
                     $this->maxScores['bestseller_score_by_sale'] = $updatedSalesScore;
                 }
 
-                $bestsellerScores[$result['product_id']] = [
-                    'bestseller_score_by_amount' => $updatedAmountScore,
-                    'bestseller_score_by_turnover' => $updatedTurnoverScore,
-                    'bestseller_score_by_sale' => $updatedSalesScore
-                ];
+                if (!isset($bestsellerScores[$result['product_id']])) {
+                    $bestsellerScores[$result['product_id']] = [
+                        'bestseller_score_by_amount' => 0,
+                        'bestseller_score_by_turnover' => 0,
+                        'bestseller_score_by_sale' => 0
+                    ];
+                }
+
+                $bestsellerScores[$result['product_id']]['bestseller_score_by_amount'] += $updatedAmountScore;
+                $bestsellerScores[$result['product_id']]['bestseller_score_by_turnover'] += $updatedTurnoverScore;
+                $bestsellerScores[$result['product_id']]['bestseller_score_by_sale'] += $updatedSalesScore;
             }
         }
         return $bestsellerScores;

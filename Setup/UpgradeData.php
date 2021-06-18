@@ -236,6 +236,17 @@ class UpgradeData implements \Magento\Framework\Setup\UpgradeDataInterface
             }
         }
 
+        if (version_compare($context->getVersion(), '1.0.1', '<')) {
+            $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
+
+            $eavSetup->updateAttribute(
+                \Magento\Catalog\Model\Product::ENTITY,
+                'bestseller_score_by_sale',
+                'default_value',
+                1
+            );
+        }
+
         $setup->endSetup();
     }
 }
