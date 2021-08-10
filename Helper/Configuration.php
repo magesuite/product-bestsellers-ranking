@@ -10,13 +10,17 @@ class Configuration
 
     public function __construct(
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-    )
-    {
+    ) {
         $this->scopeConfig = $scopeConfig;
     }
 
     public function isDailyCalculationEnabled()
     {
         return $this->scopeConfig->getValue('bestsellers/cron/enabled');
+    }
+
+    public function isUseTransactionsEnabled()
+    {
+        return $this->scopeConfig->getValue('bestsellers/cron/use_transactions');
     }
 }
