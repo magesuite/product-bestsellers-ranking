@@ -70,11 +70,6 @@ class ScoreCalculation
     protected $ordersItemsCollection;
 
     /**
-     * @var \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory
-     */
-    protected $productCollectionFactory;
-
-    /**
      * @var integer
      */
     protected $sortOrder;
@@ -115,7 +110,6 @@ class ScoreCalculation
         \MageSuite\ProductBestsellersRanking\DataProviders\OrdersPeriodFilterDataProvider $ordersPeriodFilterDataProvider,
         \MageSuite\ProductBestsellersRanking\DataProviders\MultiplierDataProvider $multiplierDataProvider,
         \MageSuite\ProductBestsellersRanking\Repository\OrderItemsCollection $ordersItemsCollection,
-        \Magento\Catalog\Model\ResourceModel\Product\CollectionFactory $productCollectionFactory,
         \Magento\Eav\Model\ResourceModel\Entity\Attribute $eavAttribute,
         \Magento\Sales\Api\OrderItemRepositoryInterface $orderItemRepository,
         \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
@@ -130,7 +124,6 @@ class ScoreCalculation
         $this->periodFilter = $ordersPeriodFilterDataProvider;
         $this->multiplierDataProvider = $multiplierDataProvider;
         $this->ordersItemsCollection = $ordersItemsCollection;
-        $this->productCollectionFactory = $productCollectionFactory;
         $this->eavAttribute = $eavAttribute;
         $this->orderItemRepository = $orderItemRepository;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
@@ -159,21 +152,19 @@ class ScoreCalculation
 
     public function calculateProductRating()
     {
-        $productsCollection = $this->productCollectionFactory->create();
-        $productsCollection->addAttributeToSelect(['price', 'bestseller_score_multiplier']);
+        $products = $this->getProductsToCalculateRating();
         $soldOutFactor = floatval($this->scopeConfig->getValue('bestsellers/boosting_factors/boosting_factor_sold_out', \Magento\Store\Model\ScopeInterface::SCOPE_STORE));
 
         /**
          * @var \Dmatthew\AttributeDescription\Model\Entity\Attribute\Interceptor $attribute
          * @var \Magento\Catalog\Model\Product\Interceptor $product
          */
-        foreach ($productsCollection as $product) {
-            $multiplier = $product->getBestsellerScoreMultiplier();
-            $multiplier = $multiplier === null ? 100 : $multiplier;
-            $price = $product->getPrice();
-            $productId = $product->getId();
+        foreach ($products as $product) {
+            $multiplier = $product['bestseller_score_multiplier'] ?? 100;
+            $price = $product['price'];
+            $productId = $product['entity_id'];
 
-            if ($product->getTypeId() === \Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE) {
+            if ($product['type_id'] === \Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE) {
                 $this->buildSelectForGroupedProduct($productId, $soldOutFactor);
             } else {
                 $updatedBestsellerScores = $this->buildSelectForProduct($productId, $price, $multiplier, $soldOutFactor);
@@ -368,5 +359,25 @@ class ScoreCalculation
             $bestsellerScoresSum,
             $this->storeId
         );
+    }
+
+    protected function getProductsToCalculateRating() {
+        $bestsellerScoreMultiplierAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'bestseller_score_multiplier');
+        $priceAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'price');
+
+        $productsQuery = $this->connection->select()->from(
+            ['p' => $this->connection->getTableName('catalog_product_entity')],
+            ['entity_id', 'type_id']
+        )->joinLeft(
+            ['bsm' => $this->connection->getTableName('catalog_product_entity_int')],
+            "bsm.entity_id = p.entity_id AND bsm.attribute_id = {$bestsellerScoreMultiplierAttributeId}",
+            ['bestseller_score_multiplier' => 'value']
+        )->joinLeft(
+            ['pr' => $this->connection->getTableName('catalog_product_entity_decimal')],
+            "pr.entity_id = p.entity_id AND pr.attribute_id = {$priceAttributeId}",
+            ['price' => 'value']
+        );
+
+        return $this->connection->fetchAll($productsQuery);
     }
 }
