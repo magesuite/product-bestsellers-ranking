@@ -363,7 +363,6 @@ class ScoreCalculation
 
     protected function getProductsToCalculateRating() {
         $bestsellerScoreMultiplierAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'bestseller_score_multiplier');
-        $priceAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'price');
 
         $productsQuery = $this->connection->select()->from(
             ['p' => $this->connection->getTableName('catalog_product_entity')],
@@ -373,10 +372,10 @@ class ScoreCalculation
             "bsm.entity_id = p.entity_id AND bsm.attribute_id = {$bestsellerScoreMultiplierAttributeId}",
             ['bestseller_score_multiplier' => 'value']
         )->joinLeft(
-            ['pr' => $this->connection->getTableName('catalog_product_entity_decimal')],
-            "pr.entity_id = p.entity_id AND pr.attribute_id = {$priceAttributeId}",
-            ['price' => 'value']
-        );
+            ['pr' => $this->connection->getTableName('catalog_product_index_price')],
+            "pr.entity_id = p.entity_id",
+            ['price']
+        )->group('p.entity_id');
 
         return $this->connection->fetchAll($productsQuery);
     }
