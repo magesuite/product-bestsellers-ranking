@@ -375,7 +375,7 @@ class ScoreCalculation
         )->joinLeft(
             ['pr' => $this->connection->getTableName('catalog_product_index_price')],
             "pr.entity_id = p.entity_id",
-            ['price_from_index']
+            ['price_from_index' => 'price']
         )->joinLeft(
             ['prb' => $this->connection->getTableName('catalog_product_entity_decimal')],
             "prb.entity_id = p.entity_id AND prb.attribute_id = {$priceAttributeId}",
