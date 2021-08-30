@@ -99,6 +99,11 @@ class ScoreCalculation
      */
     protected $searchCriteriaBuilder;
 
+    /**
+     * @var \Magento\Framework\EntityManager\MetadataPool
+     */
+    protected $metadataPool;
+
     public function __construct(
         \Magento\Framework\App\ResourceConnection $resourceConnection,
         \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig,
@@ -112,7 +117,8 @@ class ScoreCalculation
         \MageSuite\ProductBestsellersRanking\Repository\OrderItemsCollection $ordersItemsCollection,
         \Magento\Eav\Model\ResourceModel\Entity\Attribute $eavAttribute,
         \Magento\Sales\Api\OrderItemRepositoryInterface $orderItemRepository,
-        \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder
+        \Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder,
+        \Magento\Framework\EntityManager\MetadataPool $metadataPool
     ) {
         $this->resourceConnection = $resourceConnection;
         $this->scopeConfig = $scopeConfig;
@@ -127,6 +133,7 @@ class ScoreCalculation
         $this->eavAttribute = $eavAttribute;
         $this->orderItemRepository = $orderItemRepository;
         $this->searchCriteriaBuilder = $searchCriteriaBuilder;
+        $this->metadataPool = $metadataPool;
         $this->maxScores = [
             'bestseller_score_by_amount' => 0,
             'bestseller_score_by_turnover' => 0,
@@ -361,26 +368,28 @@ class ScoreCalculation
         );
     }
 
-    protected function getProductsToCalculateRating() {
+    protected function getProductsToCalculateRating()
+    {
         $bestsellerScoreMultiplierAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'bestseller_score_multiplier');
         $priceAttributeId = $this->eavAttribute->getIdByCode('catalog_product', 'price');
+        $linkField = $this->metadataPool->getMetadata(\Magento\Catalog\Api\Data\ProductInterface::class)->getLinkField();
 
         $productsQuery = $this->connection->select()->from(
             ['p' => $this->connection->getTableName('catalog_product_entity')],
             ['entity_id', 'type_id']
         )->joinLeft(
             ['bsm' => $this->connection->getTableName('catalog_product_entity_int')],
-            "bsm.entity_id = p.entity_id AND bsm.attribute_id = {$bestsellerScoreMultiplierAttributeId}",
+            "bsm.{$linkField} = p.{$linkField} AND bsm.attribute_id = {$bestsellerScoreMultiplierAttributeId}",
             ['bestseller_score_multiplier' => 'value']
         )->joinLeft(
-            ['pr' => $this->connection->getTableName('catalog_product_index_price')],
-            "pr.entity_id = p.entity_id",
+            ['pfi' => $this->connection->getTableName('catalog_product_index_price')],
+            "pfi.entity_id = p.entity_id",
             ['price_from_index' => 'price']
         )->joinLeft(
-            ['prb' => $this->connection->getTableName('catalog_product_entity_decimal')],
-            "prb.entity_id = p.entity_id AND prb.attribute_id = {$priceAttributeId}",
+            ['pfa' => $this->connection->getTableName('catalog_product_entity_decimal')],
+            "pfa.{$linkField} = p.{$linkField} AND pfa.attribute_id = {$priceAttributeId}",
             ['price_from_attribute' => 'value']
-        )->group('p.entity_id');
+        )->group("p.entity_id");
 
         return $this->connection->fetchAll($productsQuery);
     }
