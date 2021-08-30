@@ -161,7 +161,7 @@ class ScoreCalculation
          */
         foreach ($products as $product) {
             $multiplier = $product['bestseller_score_multiplier'] ?? 100;
-            $price = $product['price'] ?: $product['price_backup'];
+            $price = $product['price_from_index'] ?: $product['price_from_attribute'];
             $productId = $product['entity_id'];
 
             if ($product['type_id'] === \Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE) {
@@ -375,11 +375,11 @@ class ScoreCalculation
         )->joinLeft(
             ['pr' => $this->connection->getTableName('catalog_product_index_price')],
             "pr.entity_id = p.entity_id",
-            ['price']
+            ['price_from_index']
         )->joinLeft(
             ['prb' => $this->connection->getTableName('catalog_product_entity_decimal')],
             "prb.entity_id = p.entity_id AND prb.attribute_id = {$priceAttributeId}",
-            ['price_backup' => 'value']
+            ['price_from_attribute' => 'value']
         )->group('p.entity_id');
 
         return $this->connection->fetchAll($productsQuery);
