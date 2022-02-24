@@ -248,12 +248,21 @@ class ScoreCalculation
                 'product_id',
                 'created_at'
             ]);
-        $sql->where($tableName . '.product_id = ?', $productId);
+
         if ($parentProductId !== null) {
-            $sql->where($tableName . '.parent_product_id = ?', $parentProductId);
+            $conditions = [
+                $this->connection->quoteInto($tableName . '.product_id = ?', $productId),
+                $this->connection->quoteInto($tableName . '.parent_product_id = ?', $parentProductId)
+            ];
+            $sql->where(implode(' AND ', $conditions));
         } else {
-            $sql->where($tableName . '.parent_product_id IS NULL || '. $tableName . '.parent_product_id = ' . $tableName . '.product_id');
+            $conditions = [
+                $this->connection->quoteInto($tableName . '.product_id = ?', $productId),
+                $this->connection->quoteInto($tableName . '.parent_product_id = ?', $productId)
+            ];
+            $sql->where(implode(' OR ', $conditions));
         }
+
         $sql->join($stockTableName, $stockTableName . '.product_id = ' . $productId, $stockTableName . '.qty');
 
         if ($this->periodFilter->getOrdersPeriodFilter()) {
