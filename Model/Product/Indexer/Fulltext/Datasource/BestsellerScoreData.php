@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace MageSuite\ProductBestsellersRanking\Model\Product\Indexer\Fulltext\Datasource;
 
@@ -10,20 +11,26 @@ class BestsellerScoreData implements \Smile\ElasticsuiteCore\Api\Index\Datasourc
         'bestseller_score_by_sale'
     ];
 
-    public function addData($storeId, array $indexData) : array
+    protected array $compositeProductTypes = [
+        \Magento\Bundle\Model\Product\Type::TYPE_CODE,
+        \Magento\ConfigurableProduct\Model\Product\Type\Configurable::TYPE_CODE,
+        \Magento\GroupedProduct\Model\Product\Type\Grouped::TYPE_CODE,
+    ];
+
+    public function addData($storeId, array $indexData): array
     {
         foreach ($indexData as &$productData) {
-            if ($productData['type_id'] != \MageSuite\Frontend\Model\Product\Type\Configurable::TYPE_CODE) {
+            if (!in_array($productData['type_id'], $this->compositeProductTypes)) {
                 continue;
             }
 
-            foreach (self::BESTSELLER_SCORE_ATTRIBUTES as $bestsellerScoreAttributeCode) {
-                if (!isset($productData[$bestsellerScoreAttributeCode]) || !is_array($productData[$bestsellerScoreAttributeCode])) {
+            foreach (self::BESTSELLER_SCORE_ATTRIBUTES as $attributeCode) {
+                if (!isset($productData[$attributeCode]) || !is_array($productData[$attributeCode])) {
                     continue;
                 }
 
-                $configurableProductAttributeValue = array_shift($productData[$bestsellerScoreAttributeCode]);
-                $productData[$bestsellerScoreAttributeCode] = $configurableProductAttributeValue;
+                $attributeValue = array_shift($productData[$attributeCode]);
+                $productData[$attributeCode] = $attributeValue;
             }
         }
 
