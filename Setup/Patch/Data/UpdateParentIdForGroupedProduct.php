@@ -55,7 +55,7 @@ class UpdateParentIdForGroupedProduct implements \Magento\Framework\Setup\Patch\
             }
 
             if (empty($data)) {
-                continue;
+                break;
             }
 
             $conditions = [];
