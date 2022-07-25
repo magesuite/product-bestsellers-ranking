@@ -4,5 +4,8 @@
         <job name="bestseller_score_calculation" instance="MageSuite\ProductBestsellersRanking\Cron\ScoreCalculation" method="execute">
             <config_path>bestsellers/cron/recalculation_schedule</config_path>
         </job>
+        <job name="bestseller_cron_crash_detector" instance="MageSuite\ProductBestsellersRanking\Cron\CronJobCrashDetector" method="execute">
+            <schedule>*/5 * * * *</schedule>
+        </job>
     </group>
 </config>

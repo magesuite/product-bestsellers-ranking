@@ -6,13 +6,11 @@ class BoostingFactorDataProvider
 {
     protected $boostingFactorsConfig = [];
 
-    protected $scopeConfig;
+    protected \MageSuite\ProductBestsellersRanking\Helper\Configuration $configuration;
 
-    public function __construct(
-        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-    )
+    public function __construct(\MageSuite\ProductBestsellersRanking\Helper\Configuration $configuration)
     {
-        $this->scopeConfig = $scopeConfig;
+        $this->configuration = $configuration;
     }
 
     public function setBoostingFactors($boostingFactorsArray)
@@ -28,27 +26,25 @@ class BoostingFactorDataProvider
             return $this->boostingFactorsConfig;
         }
 
-        $scopeConfig = $this->scopeConfig;
-
         return [
             'boosterA' =>
                 [
-                    'value' => $scopeConfig->getValue('bestsellers/boosting_factors/boosting_factor_week'),
+                    'value' => $this->configuration->getBoostingFactorWeek(),
                     'max_days_old' => 7
                 ],
             'boosterB' =>
                 [
-                    'value' => $scopeConfig->getValue('bestsellers/boosting_factors/boosting_factor_month'),
+                    'value' => $this->configuration->getBoostingFactorMonth(),
                     'max_days_old' => 30
                 ],
             'boosterC' =>
                 [
-                    'value' => $scopeConfig->getValue('bestsellers/boosting_factors/boosting_factor_year'),
+                    'value' => $this->configuration->getBoostingFactorYear(),
                     'max_days_old' => 365
                 ],
             'boosterD' =>
                 [
-                    'value' => $scopeConfig->getValue('bestsellers/boosting_factors/boosting_factor_general'),
+                    'value' => $this->configuration->getBoostingFactorGeneral(),
                     'max_days_old' => 999999999
                 ]
         ];

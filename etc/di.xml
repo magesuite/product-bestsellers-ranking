@@ -4,7 +4,6 @@
         <arguments>
             <argument name="commands" xsi:type="array">
                 <item name="cs_bestsellers_recalculate" xsi:type="object">MageSuite\ProductBestsellersRanking\Console\Command\ScoreCalculation</item>
-                <item name="cs_bestsellers_clear" xsi:type="object">MageSuite\ProductBestsellersRanking\Console\Command\ClearCalculation</item>
             </argument>
         </arguments>
     </type>
@@ -23,6 +22,18 @@
                 <item name="catalog_product" xsi:type="array">
                     <item name="bestseller_score" xsi:type="object">MageSuite\ProductBestsellersRanking\Model\Product\Indexer\Fulltext\Datasource\BestsellerScoreData</item>
                 </item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="MageSuite\ProductBestsellersRanking\Model\ScoreCalculation">
+        <arguments>
+            <argument name="supportedProductTypes" xsi:type="array">
+                <item xsi:type="string" name="simple">simple</item>
+                <item xsi:type="string" name="configurable">configurable</item>
+                <item xsi:type="string" name="grouped">grouped</item>
+                <item xsi:type="string" name="bundle">bundle</item>
+                <item xsi:type="string" name="downloadable">downloadable</item>
             </argument>
         </arguments>
     </type>

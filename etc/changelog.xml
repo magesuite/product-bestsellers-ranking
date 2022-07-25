@@ -1,0 +1,23 @@
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:MageSuite_Changelog:etc/changelog.xsd">
+    <module id="MageSuite_ProductBestsellersRanking" name="MageSuite_ProductBestsellersRanking">
+        <changelog>
+            <tag version="1.0.0" date="2018-09-19">
+                <entry>
+                    <type>INIT</type>
+                    <overview>Initial release</overview>
+                </entry>
+            </tag>
+            <tag version="1.4.0" date="2022-07-14">
+                <entry>
+                    <type>FEATURE</type>
+                    <overview>
+                        Introduced temporary table for storing all calculations. Move of calculated data
+                        is now done using few native SQL queries and only this part is covered by a database transaction.
+                        Detection of cron job crash was also added.
+                    </overview>
+                    <ticket_id>MGS-4638</ticket_id>
+                </entry>
+            </tag>
+        </changelog>
+    </module>
+</config>

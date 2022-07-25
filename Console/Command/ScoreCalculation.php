@@ -6,7 +6,7 @@ class ScoreCalculation extends \Symfony\Component\Console\Command\Command
     /**
      * @var \Magento\Framework\App\State
      */
-    private $state;
+    protected $state;
 
     /**
      * @var \Magento\Framework\Config\ScopeInterface $scope
@@ -22,8 +22,7 @@ class ScoreCalculation extends \Symfony\Component\Console\Command\Command
         \Magento\Framework\App\State $state,
         \Magento\Framework\Config\ScopeInterface $scope,
         \MageSuite\ProductBestsellersRanking\Service\ScoreManager $scoreManager
-    )
-    {
+    ) {
         parent::__construct();
 
         $this->state = $state;
@@ -33,18 +32,20 @@ class ScoreCalculation extends \Symfony\Component\Console\Command\Command
 
     protected function configure()
     {
-        $this->setName('cs:bestsellers:recalculate');
+        $this->setName('cs:bestsellers:recalculate')
+            ->addOption('dry-run', null, \Symfony\Component\Console\Input\InputOption::VALUE_OPTIONAL, 'Calculated values will not be migrated to attributes', null);
     }
 
     protected function execute(
         \Symfony\Component\Console\Input\InputInterface $input,
         \Symfony\Component\Console\Output\OutputInterface $output
-    )
-    {
+    ) {
         if ($this->scope->getCurrentScope() !== 'frontend') {
             $this->state->setAreaCode('frontend');
         }
 
-        $this->scoreManager->recalculateScores();
+        $dryRun = $input->getOption('dry-run') ? (bool)$input->getOption('dry-run') :  false;
+
+        $this->scoreManager->recalculateScores($dryRun);
     }
 }

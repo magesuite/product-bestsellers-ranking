@@ -1,5 +1,5 @@
 <?php
-$productMapper = [
+return [
     100000 => [
         'price' => 10,
     ],
@@ -65,7 +65,6 @@ $productMapper = [
         'multiplier' => 10
     ],
     4000000 => [
-        'price' => 200,
-        'qty' => 0
+        'price' => 200
     ]
 ];
