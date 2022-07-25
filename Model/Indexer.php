@@ -22,12 +22,11 @@ class Indexer
             $indexer = $this->indexerFactory->create();
             $indexer->load($indexerId);
 
-            if($indexer->isScheduled()) {
+            if ($indexer->isScheduled()) {
                 continue;
             }
 
             $indexer->invalidate();
         }
     }
-
 }

@@ -7,7 +7,7 @@ class InstallData implements \Magento\Framework\Setup\InstallDataInterface
     /**
      * @var \Magento\Eav\Setup\EavSetupFactory
      */
-    private $eavSetupFactory;
+    protected $eavSetupFactory;
 
     /**
      * @var \Magento\Framework\Setup\ModuleDataSetupInterface
@@ -22,8 +22,7 @@ class InstallData implements \Magento\Framework\Setup\InstallDataInterface
     public function __construct(
         \Magento\Eav\Setup\EavSetupFactory $eavSetupFactory,
         \Magento\Framework\Setup\ModuleDataSetupInterface $moduleDataSetupInterface
-    )
-    {
+    ) {
         $this->eavSetupFactory = $eavSetupFactory;
         $this->moduleDataSetupInterface = $moduleDataSetupInterface;
         $this->eavSetup = $this->eavSetupFactory->create(['setup' => $this->moduleDataSetupInterface]);

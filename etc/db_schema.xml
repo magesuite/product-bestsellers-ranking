@@ -15,5 +15,19 @@
         <index referenceId="SALES_ORDER_ITEM_PARENT_PRODUCT_ID" indexType="btree">
             <column name="parent_product_id"/>
         </index>
+        <index referenceId="BESTSELLERS_CALCULATION_PRODUCT_ID_CREATED_AT" indexType="btree">
+            <column name="product_id" />
+            <column name="created_at" />
+        </index>
+        <index referenceId="BESTSELLERS_CALCULATION_PARENT_PRODUCT_ID_CREATED_AT" indexType="btree">
+            <column name="parent_product_id" />
+            <column name="created_at" />
+        </index>
+    </table>
+    <table name="bestsellers_calculations" resource="default" engine="innodb">
+        <column xsi:type="int" name="product_id" padding="10" unsigned="true" nullable="false" comment="Product Id"/>
+        <column xsi:type="int" name="bestseller_score_by_amount" unsigned="false" nullable="false" default="0" identity="false" comment="Bestseller score by amount"/>
+        <column xsi:type="int" name="bestseller_score_by_turnover" unsigned="false" nullable="false" default="0" identity="false" comment="Bestseller score by turnover"/>
+        <column xsi:type="int" name="bestseller_score_by_sale" unsigned="false" nullable="false" default="0" identity="false" comment="Bestseller score by sale"/>
     </table>
 </schema>

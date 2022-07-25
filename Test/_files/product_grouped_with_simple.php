@@ -1,6 +1,6 @@
 <?php
 
-require __DIR__ . '/../_files/product_mapper.php';
+$productMapper = include __DIR__ . '/../_files/product_mapper.php';
 
 /** @var \Magento\Catalog\Api\ProductRepositoryInterface $productRepository */
 $productRepository = \Magento\TestFramework\Helper\Bootstrap::getObjectManager()
@@ -50,7 +50,7 @@ foreach ($productMapper as $id => $data) {
         ->setStockData(
             [
                 'use_config_manage_stock' => 1,
-                'qty' => isset($data['qty']) ? $data['qty'] : 100,
+                'qty' => isset($data['qty']) ? $data['qty'] : 1000,
                 'is_qty_decimal' => 0,
                 'is_in_stock' => 1,
             ]
@@ -59,7 +59,8 @@ foreach ($productMapper as $id => $data) {
         ->setBestsellerScoreByTurnover(0)
         ->setBestsellerScoreMultiplier(isset($data['multiplier']) ? $data['multiplier'] : 100)
         ->setQty(1)
-        ->setHasOptions(false);;
+        ->setHasOptions(false);
+    ;
 
     $linkedProducts[] = $productRepository->save($product);
 }
@@ -75,7 +76,7 @@ $groupedProduct->setTypeId(\Magento\GroupedProduct\Model\Product\Type\Grouped::T
     ->setSku('grouped')
     ->setVisibility(\Magento\Catalog\Model\Product\Visibility::VISIBILITY_BOTH)
     ->setStatus(\Magento\Catalog\Model\Product\Attribute\Source\Status::STATUS_ENABLED)
-    ->setStockData(['use_config_manage_stock' => 1, 'is_in_stock' => 1])
+    ->setStockData(['use_config_manage_stock' => 1, 'is_in_stock' => 1, 'qty' => 100])
     ->setBestsellerScoreByAmount(0)
     ->setBestsellerScoreByTurnover(0)
     ->setBestsellerScoreMultiplier(100);
@@ -88,10 +89,10 @@ foreach ($linkedProducts as $linkedProduct) {
         ->setLinkedProductSku($linkedProduct->getSku())
         ->setLinkedProductType($linkedProduct->getTypeId())
         ->getExtensionAttributes()
-        ->setQty(1);
+        ->setQty(1000);
     $newLinks[] = $productLink;
 }
 
-$product->setProductLinks($newLinks);
+$groupedProduct->setProductLinks($newLinks);
 
 $productRepository->save($groupedProduct);

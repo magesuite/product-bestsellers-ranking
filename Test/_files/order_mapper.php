@@ -1,5 +1,5 @@
 <?php
-$orderMapper = [
+return [
     2000001 => [
         'price' => 10,
         'product_price' => 10,

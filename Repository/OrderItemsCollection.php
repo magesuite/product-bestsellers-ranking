@@ -12,8 +12,7 @@ class OrderItemsCollection
 
     public function __construct(
         \Magento\Sales\Model\ResourceModel\Order\Item\CollectionFactory $salesOrderItemsCollectionFactory
-    )
-    {
+    ) {
         $this->salesOrderItemsCollectionFactory = $salesOrderItemsCollectionFactory;
     }
 
@@ -23,14 +22,14 @@ class OrderItemsCollection
         $collection = $this->salesOrderItemsCollectionFactory->create()
             ->addFieldToSelect(['sku', 'product_id', 'price', 'qty_ordered']);
 
-        if($dateFrom) {
+        if ($dateFrom) {
             $from = new \DateTime($dateFrom);
             $collection
                 ->addFieldToFilter('created_at', ['gteq' => $from->format('Y-m-d 00:00:00')]);
 
         }
 
-        if($dateTo) {
+        if ($dateTo) {
             $to = new \DateTime($dateTo);
             $collection
                 ->addFieldToFilter('created_at', ['lteq' => $to->format('Y-m-d 23:59:59')]);

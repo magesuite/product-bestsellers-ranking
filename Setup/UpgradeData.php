@@ -7,7 +7,7 @@ class UpgradeData implements \Magento\Framework\Setup\UpgradeDataInterface
     /**
      * @var \Magento\Eav\Setup\EavSetupFactory
      */
-    private $eavSetupFactory;
+    protected $eavSetupFactory;
 
     /**
      * @var \Magento\Framework\Setup\ModuleDataSetupInterface
@@ -27,7 +27,7 @@ class UpgradeData implements \Magento\Framework\Setup\UpgradeDataInterface
     /**
      * @var \Magento\Framework\App\State
      */
-    private $state;
+    protected $state;
 
     /**
      * @var \Magento\Framework\Config\ScopeInterface $scope
@@ -58,8 +58,7 @@ class UpgradeData implements \Magento\Framework\Setup\UpgradeDataInterface
         \Magento\Catalog\Model\ProductFactory $productFactory,
         \Magento\Catalog\Model\ResourceModel\Product\Action $productResourceAction,
         \Magento\Store\Model\StoreManager $storeManager
-    )
-    {
+    ) {
         $this->eavSetupFactory = $eavSetupFactory;
         $this->moduleDataSetupInterface = $moduleDataSetupInterface;
         $this->eavSetup = $this->eavSetupFactory->create(['setup' => $this->moduleDataSetupInterface]);
@@ -97,7 +96,6 @@ class UpgradeData implements \Magento\Framework\Setup\UpgradeDataInterface
 
         if (version_compare($context->getVersion(), '0.0.4', '<')) {
             $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
-
 
             $eavSetup->addAttribute(
                 \Magento\Catalog\Model\Product::ENTITY,
@@ -197,7 +195,9 @@ class UpgradeData implements \Magento\Framework\Setup\UpgradeDataInterface
 
             try {
                 $this->state->setAreaCode('frontend');
-            } catch (\Exception $e) {}
+            } catch (\Exception $e) { // phpcs:ignore
+
+            }
 
             $ids = $this->productFactory->create()->getProductEntitiesInfo(['entity_id']);
 
@@ -226,7 +226,7 @@ class UpgradeData implements \Magento\Framework\Setup\UpgradeDataInterface
         if (version_compare($context->getVersion(), '1.0.0', '<')) {
             $eavSetup = $this->eavSetupFactory->create(['setup' => $setup]);
 
-            foreach(['bestseller_score_by_amount', 'bestseller_score_by_sale', 'bestseller_score_by_turnover'] as $attributeCode) {
+            foreach (['bestseller_score_by_amount', 'bestseller_score_by_sale', 'bestseller_score_by_turnover'] as $attributeCode) {
                 $eavSetup->updateAttribute(
                     \Magento\Catalog\Model\Product::ENTITY,
                     $attributeCode,

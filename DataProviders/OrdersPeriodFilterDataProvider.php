@@ -4,37 +4,30 @@ namespace MageSuite\ProductBestsellersRanking\DataProviders;
 
 class OrdersPeriodFilterDataProvider
 {
-    protected $scopeConfig;
+    public const PERIOD_LAST_WEEK = 1;
+    public const PERIOD_LAST_MONTH = 2;
+    public const PERIOD_LAST_YEAR = 3;
 
-    public function __construct(
-        \Magento\Framework\App\Config\ScopeConfigInterface $scopeConfig
-    )
+    protected \MageSuite\ProductBestsellersRanking\Helper\Configuration $configuration;
+
+    public function __construct(\MageSuite\ProductBestsellersRanking\Helper\Configuration $configuration)
     {
-        $this->scopeConfig = $scopeConfig;
+        $this->configuration = $configuration;
     }
 
     public function getOrdersPeriodFilter()
     {
-        $periodConfig = $this->scopeConfig->getValue('bestsellers/orders_period/period');
+        $periodConfig = $this->configuration->getOrdersPeriod();
 
         switch ($periodConfig) {
-            case 0:
-                $result = false;
-                break;
-            case 1:
-                $result = date('Y-m-d 00:00:00', strtotime('-7 days'));
-                break;
-            case 2:
-                $result = date('Y-m-d 00:00:00', strtotime('-30 days'));
-                break;
-            case 3:
-                $result = date('Y-m-d 00:00:00', strtotime('-1 year'));
-                break;
+            case self::PERIOD_LAST_WEEK:
+                return date('Y-m-d 00:00:00', strtotime('-7 days'));
+            case self::PERIOD_LAST_MONTH:
+                return date('Y-m-d 00:00:00', strtotime('-30 days'));
+            case self::PERIOD_LAST_YEAR:
+                return date('Y-m-d 00:00:00', strtotime('-1 year'));
             default:
-                $result = false;
-                break;
+                return null;
         }
-
-        return $result;
     }
 }
