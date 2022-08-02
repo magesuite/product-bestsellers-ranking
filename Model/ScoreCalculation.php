@@ -157,7 +157,7 @@ class ScoreCalculation
         $sql->columns(new \Zend_Db_Expr(sprintf("CASE %s END as `period_multiplier`", implode(' ', $caseConditions))));
 
         if ($productType === 'simple') {
-            $sql->where('parent_product_id IS NULL');
+            $sql->where(new \Zend_Db_Expr('parent_product_id IS NULL OR parent_product_id = soi.product_id'));
             $sql->where('parent_item_id IS NULL');
         }
 
