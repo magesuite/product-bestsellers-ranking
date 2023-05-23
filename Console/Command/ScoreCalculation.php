@@ -45,7 +45,8 @@ class ScoreCalculation extends \Symfony\Component\Console\Command\Command
         }
 
         $dryRun = $input->getOption('dry-run') ? (bool)$input->getOption('dry-run') :  false;
-
         $this->scoreManager->recalculateScores($dryRun);
+
+        return \Magento\Framework\Console\Cli::RETURN_SUCCESS;
     }
 }
