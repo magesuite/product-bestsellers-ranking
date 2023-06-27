@@ -45,7 +45,7 @@ class BoostingFactorDataProvider
             'boosterD' =>
                 [
                     'value' => $this->configuration->getBoostingFactorGeneral(),
-                    'max_days_old' => 999999999
+                    'max_days_old' => 99999
                 ]
         ];
     }
