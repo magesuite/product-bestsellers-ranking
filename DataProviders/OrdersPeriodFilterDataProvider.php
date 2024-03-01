@@ -25,7 +25,7 @@ class OrdersPeriodFilterDataProvider
             case self::PERIOD_LAST_MONTH:
                 return date('Y-m-d 00:00:00', strtotime('-30 days'));
             case self::PERIOD_LAST_YEAR:
-                return date('Y-m-d 00:00:00', strtotime('-1 year'));
+                return date('Y-m-d 00:00:00', strtotime('-365 days'));
             default:
                 return null;
         }
