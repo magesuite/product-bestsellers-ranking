@@ -6,7 +6,7 @@ namespace MageSuite\ProductBestsellersRanking\Test\Integration\Model;
  * @magentoDbIsolation enabled
  * @magentoAppIsolation enabled
  */
-class GroupedCalculationsTest extends AbstractCalculationsTest
+class GroupedCalculationsTest extends AbstractCalculationsTestCase
 {
     /**
      * @var \MageSuite\ProductBestsellersRanking\Model\ScoreCalculation

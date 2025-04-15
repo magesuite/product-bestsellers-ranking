@@ -8,7 +8,7 @@ namespace MageSuite\ProductBestsellersRanking\Test\Integration\Model;
  * @magentoDataFixture loadProducts
  * @magentoDataFixture loadOrders
  */
-class SimpleCalculationsTest extends AbstractCalculationsTest
+class SimpleCalculationsTest extends AbstractCalculationsTestCase
 {
     /**
      * @var \MageSuite\ProductBestsellersRanking\Model\ScoreCalculation

@@ -2,7 +2,7 @@
 
 namespace MageSuite\ProductBestsellersRanking\Test\Integration\Model;
 
-abstract class AbstractCalculationsTest extends \PHPUnit\Framework\TestCase
+abstract class AbstractCalculationsTestCase extends \PHPUnit\Framework\TestCase
 {
     protected function getBoostingFactorArray()
     {
