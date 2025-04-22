@@ -2,7 +2,7 @@
 
 namespace MageSuite\ProductBestsellersRanking\Test\Integration\Model;
 
-class TransactionTest extends AbstractCalculationsTest
+class TransactionTest extends AbstractCalculationsTestCase
 {
     /**
      * @var \MageSuite\ProductBestsellersRanking\Model\ScoreCalculation
