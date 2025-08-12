@@ -7,8 +7,8 @@ class ScoreCalculation
     public const DEFAULT_MULTIPLIER = 100;
     public const ATTRIBUTES = ['bestseller_score_by_amount', 'bestseller_score_by_turnover', 'bestseller_score_by_sale'];
 
-    protected $useTransaction = false;
-    protected $dryRun = false;
+    protected bool $useTransaction = false;
+    protected bool $dryRun = false;
 
     protected ?\Magento\Framework\DB\Adapter\AdapterInterface $connection;
     protected \MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider $boostingFactorDataProvider;
@@ -27,7 +27,7 @@ class ScoreCalculation
         \Magento\Framework\EntityManager\MetadataPool $metadataPool,
         \MageSuite\ProductBestsellersRanking\Helper\Configuration $configuration,
         \MageSuite\ProductBestsellersRanking\Model\ResourceModel\MoveCalculationsToAttributes $moveCalculationsToAttributes,
-        $supportedProductTypes = []
+        array $supportedProductTypes = []
     ) {
         $this->connection = $resourceConnection->getConnection();
         $this->boostingFactorDataProvider = $boostingFactorDataProvider;
@@ -39,17 +39,17 @@ class ScoreCalculation
         $this->supportedProductTypes = $supportedProductTypes;
     }
 
-    public function setUseTransaction($useTransaction)
+    public function setUseTransaction(bool $useTransaction): void
     {
         $this->useTransaction = $useTransaction;
     }
 
-    public function setDryRun($dryRun = false)
+    public function setDryRun(bool $dryRun = false): void
     {
         $this->dryRun = $dryRun;
     }
 
-    public function recalculateScore()
+    public function recalculateScore(): void
     {
         $this->connection->delete($this->connection->getTableName('bestsellers_calculations'));
 
@@ -81,7 +81,33 @@ class ScoreCalculation
         }
     }
 
-    public function calculateScores($productIds, $productType = 'simple', $multipliers = []): array
+    protected function calculateScoresByProductType(string $productType): void
+    {
+        foreach ($this->getProductsToCalculateRating($productType) as $products) {
+            $productIds = [];
+            $multipliers = [];
+
+            foreach ($products as $product) {
+                $productId = (int)$product['entity_id'];
+                $productIds[] = $productId;
+                $multipliers[$productId] = $product['bestseller_score_multiplier'] ?? self::DEFAULT_MULTIPLIER;
+            }
+
+            $scores = $this->calculateScores($productIds, $productType, $multipliers);
+
+            if (empty($scores)) {
+                continue;
+            }
+
+            $this->connection->insertOnDuplicate(
+                $this->connection->getTableName('bestsellers_calculations'),
+                $scores,
+                array_keys($scores[array_key_first($scores)])
+            );
+        }
+    }
+
+    public function calculateScores(array $productIds, string $productType = 'simple', array $multipliers = []): array
     {
         $bestsellerScores = [];
 
@@ -96,13 +122,14 @@ class ScoreCalculation
         foreach ($results as $result) {
             $productId = in_array($productType, ['grouped']) ? $result['parent_product_id'] : $result['product_id'];
             $productMultiplier = $multipliers[$productId] ?? self::DEFAULT_MULTIPLIER;
+            $turnoverMultiplier = $this->configuration->getTurnoverMultiplier();
 
             $qtyMultiplier = isset($result['qty']) && (float)$result['qty'] == 0 ? $this->configuration->getSoldOutFactor() : 1;
 
             $scores = [];
 
             $scores['bestseller_score_by_amount'] = 1 + round($result['sum_qty_ordered'] * $result['period_multiplier'] * $productMultiplier * $qtyMultiplier);
-            $scores['bestseller_score_by_turnover'] = 1 + round($result['sum_turnover'] * $result['period_multiplier'] * self::DEFAULT_MULTIPLIER * $productMultiplier * $qtyMultiplier);
+            $scores['bestseller_score_by_turnover'] = 1 + round($result['sum_turnover'] * $result['period_multiplier'] * $turnoverMultiplier * $productMultiplier * $qtyMultiplier);
             $scores['bestseller_score_by_sale'] = 1 + round($result['count_ordered'] * $result['period_multiplier'] * $productMultiplier * $qtyMultiplier);
 
             if (!isset($bestsellerScores[$productId])) {
@@ -121,7 +148,7 @@ class ScoreCalculation
         return $bestsellerScores;
     }
 
-    public function getBaseQuery($productIds, $productType = 'simple')
+    public function getBaseQuery(array $productIds, string $productType = 'simple')
     {
         $salesOrderItemTable = $this->connection->getTableName('sales_order_item');
         $stockTableName = $this->connection->getTableName('cataloginventory_stock_item');
@@ -168,7 +195,7 @@ class ScoreCalculation
         return $sql;
     }
 
-    protected function getProductsToCalculateRating($productType)
+    protected function getProductsToCalculateRating(string $productType)
     {
         $bestsellerScoreMultiplierAttributeId = $this->configuration->getScoreMultiplierAttributeId();
         $linkField = $this->metadataPool->getMetadata(\Magento\Catalog\Api\Data\ProductInterface::class)->getLinkField();
@@ -184,9 +211,9 @@ class ScoreCalculation
                 "bsm.{$linkField} = p.{$linkField} AND bsm.attribute_id = {$bestsellerScoreMultiplierAttributeId}",
                 ['bestseller_score_multiplier' => 'value']
             )
-            ->where('p.type_id = ?', $productType)
-            ->group("p.entity_id")
-            ->limitPage($page, $this->configuration->getBatchSize());
+                ->where('p.type_id = ?', $productType)
+                ->group("p.entity_id")
+                ->limitPage($page, $this->configuration->getBatchSize());
 
             $results = $this->connection->fetchAll($productsQuery);
 
@@ -194,32 +221,6 @@ class ScoreCalculation
 
             yield $results;
         } while (!empty($results));
-    }
-
-    protected function calculateScoresByProductType(string $productType): void
-    {
-        foreach ($this->getProductsToCalculateRating($productType) as $products) {
-            $productIds = [];
-            $multipliers = [];
-
-            foreach ($products as $product) {
-                $productId = (int)$product['entity_id'];
-                $productIds[] = $productId;
-                $multipliers[$productId] = $product['bestseller_score_multiplier'] ?? self::DEFAULT_MULTIPLIER;
-            }
-
-            $scores = $this->calculateScores($productIds, $productType, $multipliers);
-
-            if (empty($scores)) {
-                continue;
-            }
-
-            $this->connection->insertOnDuplicate(
-                $this->connection->getTableName('bestsellers_calculations'),
-                $scores,
-                array_keys($scores[array_key_first($scores)])
-            );
-        }
     }
 
     protected function reverseScoresSorting(): void
@@ -234,7 +235,7 @@ class ScoreCalculation
                      {$this->connection->getTableName('bestsellers_calculations')}
             ")[0] ?? 0;
 
-            $updateColumns[$attributeCode] = new \Zend_Db_Expr(((int)$max+1) . ' - ' . $attributeCode);
+            $updateColumns[$attributeCode] = new \Zend_Db_Expr(((int)$max + 1) . ' - ' . $attributeCode);
         }
 
         $this->connection->update(
