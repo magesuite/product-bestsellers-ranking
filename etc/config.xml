@@ -20,6 +20,7 @@
                 <boosting_factor_year>1</boosting_factor_year>
                 <boosting_factor_general>0</boosting_factor_general>
                 <boosting_factor_sold_out>1</boosting_factor_sold_out>
+                <turnover_multiplier>100</turnover_multiplier>
             </boosting_factors>
             <sorting>
                 <direction>asc</direction>
