@@ -17,7 +17,6 @@ class SimpleCalculationsTest extends AbstractCalculationsTestCase
     protected ?\MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider $boostingFactorDataProvider;
     protected ?\Magento\Catalog\Api\ProductRepositoryInterface $productRepository;
     protected ?\Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder;
-    protected ?\PHPUnit\Framework\MockObject\MockObject $moveCalculationsToAttributeMock;
 
     public function setUp(): void
     {
@@ -39,60 +38,60 @@ class SimpleCalculationsTest extends AbstractCalculationsTestCase
         $this->scoreCalculationModel->recalculateScore();
 
         //period 1 - 7 days
-        $product = $this->productRepository->get('simple-100000');
+        $product = $this->productRepository->get('simple-100000', false, 0, true);
         $this->assertEquals(6001, $product->getBestsellerScoreByAmount());
         $this->assertEquals(6000001, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(301, $product->getBestsellerScoreBySale());
 
         //period 1 - 7 days and 2 orders
-        $product = $this->productRepository->get('simple-400000');
+        $product = $this->productRepository->get('simple-400000', false, 0, true);
         $this->assertEquals(5401, $product->getBestsellerScoreByAmount());
         $this->assertEquals(21600001, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(601, $product->getBestsellerScoreBySale());
 
         //period 8 - 30 days
-        $product = $this->productRepository->get('simple-600000');
+        $product = $this->productRepository->get('simple-600000', false, 0, true);
         $this->assertEquals(3001, $product->getBestsellerScoreByAmount());
         $this->assertEquals(18000001, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(201, $product->getBestsellerScoreBySale());
 
         //period 8 - 30 days and 2 orders
-        $product = $this->productRepository->get('simple-1000000');
+        $product = $this->productRepository->get('simple-1000000', false, 0, true);
         $this->assertEquals(2401, $product->getBestsellerScoreByAmount());
         $this->assertEquals(24000001, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(401, $product->getBestsellerScoreBySale());
 
         //period 31 - 365 days
-        $product = $this->productRepository->get('simple-1200000');
+        $product = $this->productRepository->get('simple-1200000', false, 0, true);
         $this->assertEquals(901, $product->getBestsellerScoreByAmount());
         $this->assertEquals(10800001, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(101, $product->getBestsellerScoreBySale());
 
         //period 31 - 365 days and 2 orders
-        $product = $this->productRepository->get('simple-1400000');
+        $product = $this->productRepository->get('simple-1400000', false, 0, true);
         $this->assertEquals(801, $product->getBestsellerScoreByAmount());
         $this->assertEquals(11200001, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(201, $product->getBestsellerScoreBySale());
 
         //period > 365 days
-        $product = $this->productRepository->get('simple-1600000');
+        $product = $this->productRepository->get('simple-1600000', false, 0, true);
         $this->assertEquals(1, $product->getBestsellerScoreByAmount());
         $this->assertEquals(1, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(1, $product->getBestsellerScoreBySale());
 
         //period > 365 days and 2 orders
-        $product = $this->productRepository->get('simple-1600000');
+        $product = $this->productRepository->get('simple-1600000', false, 0, true);
         $this->assertEquals(1, $product->getBestsellerScoreByAmount());
         $this->assertEquals(1, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(1, $product->getBestsellerScoreBySale());
 
         //Mixed periods
-        $product = $this->productRepository->get('simple-1800000');
+        $product = $this->productRepository->get('simple-1800000', false, 0, true);
         $this->assertEquals(3603, $product->getBestsellerScoreByAmount());
         $this->assertEquals(64800003, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(1003, $product->getBestsellerScoreBySale());
 
-        $product = $this->productRepository->get('simple-1900000');
+        $product = $this->productRepository->get('simple-1900000', false, 0, true);
         $this->assertEquals(4002, $product->getBestsellerScoreByAmount());
         $this->assertEquals(76000002, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(502, $product->getBestsellerScoreBySale());
@@ -106,7 +105,7 @@ class SimpleCalculationsTest extends AbstractCalculationsTestCase
         $this->boostingFactorDataProvider->setBoostingFactors($this->getBoostingFactorArray());
         $this->scoreCalculationModel->recalculateScore();
 
-        $product = $this->productRepository->get('simple-1800000');
+        $product = $this->productRepository->get('simple-1800000', false, 0, true);
         $this->assertEquals(2701, $product->getBestsellerScoreByAmount());
         $this->assertEquals(48600001, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(601, $product->getBestsellerScoreBySale());
@@ -117,7 +116,7 @@ class SimpleCalculationsTest extends AbstractCalculationsTestCase
         $this->boostingFactorDataProvider->setBoostingFactors($this->getBoostingFactorArray());
         $this->scoreCalculationModel->recalculateScore();
 
-        $product = $this->productRepository->get('simple-3000000');
+        $product = $this->productRepository->get('simple-3000000', false, 0, true);
         $this->assertEquals(31, $product->getBestsellerScoreByAmount());
         $this->assertEquals(600001, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(31, $product->getBestsellerScoreBySale());
@@ -131,7 +130,7 @@ class SimpleCalculationsTest extends AbstractCalculationsTestCase
         $this->boostingFactorDataProvider->setBoostingFactors($this->getBoostingFactorArray());
         $this->scoreCalculationModel->recalculateScore();
 
-        $product = $this->productRepository->get('simple-1200000');
+        $product = $this->productRepository->get('simple-1200000', false, 0, true);
         $this->assertEquals(5101, $product->getBestsellerScoreByAmount());
         $this->assertEquals(65200002, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(903, $product->getBestsellerScoreBySale());

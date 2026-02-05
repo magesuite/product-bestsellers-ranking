@@ -14,7 +14,6 @@ class GroupedCalculationsTest extends AbstractCalculationsTestCase
     protected ?\MageSuite\ProductBestsellersRanking\Model\ScoreCalculation $scoreCalculationModel;
     protected ?\MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider $boostingFactorDataProvider;
     protected ?\Magento\Catalog\Api\ProductRepositoryInterface $productRepository;
-    protected ?\PHPUnit\Framework\MockObject\MockObject $moveCalculationsToAttributeMock;
 
     public function setUp(): void
     {

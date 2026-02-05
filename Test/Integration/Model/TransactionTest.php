@@ -11,7 +11,6 @@ class TransactionTest extends AbstractCalculationsTestCase
     protected ?\MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider $boostingFactorDataProvider;
     protected ?\Magento\Catalog\Api\ProductRepositoryInterface $productRepository;
     protected ?\Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder;
-    protected ?\PHPUnit\Framework\MockObject\MockObject $moveCalculationsToAttributeMock;
 
     public function setUp(): void
     {

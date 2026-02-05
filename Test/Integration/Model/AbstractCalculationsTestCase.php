@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MageSuite\ProductBestsellersRanking\Test\Integration\Model;
 
 abstract class AbstractCalculationsTestCase extends \PHPUnit\Framework\TestCase
 {
-    protected function getBoostingFactorArray()
+    protected function getBoostingFactorArray(): array
     {
         return [
             'boosterA' =>
