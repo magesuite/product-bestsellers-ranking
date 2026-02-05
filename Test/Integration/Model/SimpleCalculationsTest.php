@@ -1,59 +1,39 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MageSuite\ProductBestsellersRanking\Test\Integration\Model;
 
 /**
  * @magentoDbIsolation enabled
  * @magentoAppIsolation enabled
- * @magentoDataFixture loadProducts
- * @magentoDataFixture loadOrders
+ * @magentoDataFixture MageSuite_ProductBestsellersRanking::Test/_files/product_add.php
+ * @magentoDataFixture MageSuite_ProductBestsellersRanking::Test/_files/order.php
  */
 class SimpleCalculationsTest extends AbstractCalculationsTestCase
 {
-    /**
-     * @var \MageSuite\ProductBestsellersRanking\Model\ScoreCalculation
-     */
-    protected $scoreCalculationModel;
-
-    /**
-     * @var \MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider
-     */
-    protected $boostingFactorDataProvider;
-
-    /**
-     * @var \Magento\Catalog\Api\ProductRepositoryInterface
-     */
-    protected $productRepository;
-
-    /**
-     * @var \Magento\Framework\Api\SearchCriteriaBuilder
-     */
-    protected $searchCriteriaBuilder;
-
-    /**
-     * @var \Magento\Framework\ObjectManagerInterface
-     */
-    protected $objectManager;
-
-    /**
-     * @var \MageSuite\ProductBestsellersRanking\Model\MoveCalculationsToAttributes|\PHPUnit\Framework\MockObject\MockObject
-     */
-    protected $moveCalculationsToAttributeMock;
+    protected ?\Magento\Framework\ObjectManagerInterface $objectManager;
+    protected ?\MageSuite\ProductBestsellersRanking\Model\ScoreCalculation $scoreCalculationModel;
+    protected ?\MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider $boostingFactorDataProvider;
+    protected ?\Magento\Catalog\Api\ProductRepositoryInterface $productRepository;
+    protected ?\Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder;
+    protected ?\PHPUnit\Framework\MockObject\MockObject $moveCalculationsToAttributeMock;
 
     public function setUp(): void
     {
         $this->objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-        $this->scoreCalculationModel = $this->objectManager->create(\MageSuite\ProductBestsellersRanking\Model\ScoreCalculation::class);
+
+        $this->scoreCalculationModel = $this->objectManager->get(\MageSuite\ProductBestsellersRanking\Model\ScoreCalculation::class);
         $this->boostingFactorDataProvider = $this->objectManager->get(\MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider::class);
-        $this->productRepository = $this->objectManager->create(\Magento\Catalog\Api\ProductRepositoryInterface::class);
-        $this->searchCriteriaBuilder = $this->objectManager->create(\Magento\Framework\Api\SearchCriteriaBuilder::class);
+        $this->productRepository = $this->objectManager->get(\Magento\Catalog\Api\ProductRepositoryInterface::class);
+        $this->searchCriteriaBuilder = $this->objectManager->get(\Magento\Framework\Api\SearchCriteriaBuilder::class);
     }
 
     /**
      * Batch size is set to 2 to ensure pagination of products works correctly
      * @magentoAdminConfigFixture bestsellers/performance/batch_size 2
      */
-    public function testSimpleProductsCalculation()
+    public function testSimpleProductsCalculation(): void
     {
         $this->boostingFactorDataProvider->setBoostingFactors($this->getBoostingFactorArray());
         $this->scoreCalculationModel->recalculateScore();
@@ -121,7 +101,7 @@ class SimpleCalculationsTest extends AbstractCalculationsTestCase
     /**
      * @magentoAdminConfigFixture bestsellers/orders_period/period 1
      */
-    public function testItOnlyTakesLastWeekOrdersIntoAccount()
+    public function testItOnlyTakesLastWeekOrdersIntoAccount(): void
     {
         $this->boostingFactorDataProvider->setBoostingFactors($this->getBoostingFactorArray());
         $this->scoreCalculationModel->recalculateScore();
@@ -132,7 +112,7 @@ class SimpleCalculationsTest extends AbstractCalculationsTestCase
         $this->assertEquals(601, $product->getBestsellerScoreBySale());
     }
 
-    public function testCalculationIncludingMultiplier()
+    public function testCalculationIncludingMultiplier(): void
     {
         $this->boostingFactorDataProvider->setBoostingFactors($this->getBoostingFactorArray());
         $this->scoreCalculationModel->recalculateScore();
@@ -146,7 +126,7 @@ class SimpleCalculationsTest extends AbstractCalculationsTestCase
     /**
      * @magentoConfigFixture current_store bestsellers/sorting/direction desc
      */
-    public function testCalculationWithDescendingOrder()
+    public function testCalculationWithDescendingOrder(): void
     {
         $this->boostingFactorDataProvider->setBoostingFactors($this->getBoostingFactorArray());
         $this->scoreCalculationModel->recalculateScore();
@@ -160,7 +140,7 @@ class SimpleCalculationsTest extends AbstractCalculationsTestCase
     /**
      * @magentoConfigFixture current_store bestsellers/boosting_factors/boosting_factor_sold_out 0.5
      */
-    public function testSoldOutProductCalculation()
+    public function testSoldOutProductCalculation(): void
     {
         $product = $this->productRepository->get('simple-4000000', true, 0, true);
         $product->setQty(0);
@@ -175,25 +155,5 @@ class SimpleCalculationsTest extends AbstractCalculationsTestCase
         $this->assertEquals(151, $product->getBestsellerScoreByAmount());
         $this->assertEquals(3000001, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(151, $product->getBestsellerScoreBySale());
-    }
-
-    public static function loadProducts()
-    {
-        include __DIR__.'/../../_files/product_add.php';
-    }
-
-    public static function loadProductsRollback()
-    {
-        include __DIR__.'/../../_files/product_add_rollback.php';
-    }
-
-    public static function loadOrders()
-    {
-        include __DIR__.'/../../_files/order.php';
-    }
-
-    public static function loadOrdersRollback()
-    {
-        include __DIR__.'/../../_files/order_rollback.php';
     }
 }
