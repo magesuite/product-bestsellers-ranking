@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MageSuite\ProductBestsellersRanking\Test\Integration\Model;
 
 /**
@@ -8,47 +10,29 @@ namespace MageSuite\ProductBestsellersRanking\Test\Integration\Model;
  */
 class ConfigurableCalculationsTest extends AbstractCalculationsTestCase
 {
-    /**
-     * @var \MageSuite\ProductBestsellersRanking\Model\ScoreCalculation
-     */
-    protected $scoreCalculationModel;
+    protected ?\Magento\Framework\ObjectManagerInterface $objectManager;
+    protected ?\MageSuite\ProductBestsellersRanking\Model\ScoreCalculation $scoreCalculationModel;
+    protected ?\MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider $boostingFactorDataProvider;
+    protected ?\Magento\Catalog\Api\ProductRepositoryInterface $productRepository;
+    protected ?\Magento\Framework\Api\SearchCriteriaBuilder $searchCriteriaBuilder;
 
-    /**
-     * @var \MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider
-     */
-    protected $boostingFactorDataProvider;
-
-    /**
-     * @var \Magento\Catalog\Api\ProductRepositoryInterface
-     */
-    protected $productRepository;
-
-    /**
-     * @var \Magento\Framework\Api\SearchCriteriaBuilder
-     */
-    protected $searchCriteriaBuilder;
-
-    /**
-     * @var \Magento\Framework\ObjectManagerInterface
-     */
-    protected $objectManager;
-
-    public function setUp(): void
+    protected function setUp(): void
     {
         $this->objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-        $this->scoreCalculationModel = $this->objectManager->create(\MageSuite\ProductBestsellersRanking\Model\ScoreCalculation::class);
+        
+        $this->scoreCalculationModel = $this->objectManager->get(\MageSuite\ProductBestsellersRanking\Model\ScoreCalculation::class);
         $this->boostingFactorDataProvider = $this->objectManager->get(\MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider::class);
-        $this->productRepository = $this->objectManager->create(\Magento\Catalog\Api\ProductRepositoryInterface::class);
-        $this->searchCriteriaBuilder = $this->objectManager->create(\Magento\Framework\Api\SearchCriteriaBuilder::class);
+        $this->productRepository = $this->objectManager->get(\Magento\Catalog\Api\ProductRepositoryInterface::class);
+        $this->searchCriteriaBuilder = $this->objectManager->get(\Magento\Framework\Api\SearchCriteriaBuilder::class);
     }
 
     /**
      * @magentoDbIsolation enabled
      * @magentoAppIsolation enabled
      * @magentoConfigFixture default_store carriers/flatrate/active 1
-     * @magentoDataFixture loadOrders
+     * @magentoDataFixture MageSuite_ProductBestsellersRanking::Test/_files/orders_with_configurable_products.php
      */
-    public function testItCalculatesProperlyConfigurableProductsScores()
+    public function testItCalculatesProperlyConfigurableProductsScores(): void
     {
         $this->boostingFactorDataProvider->setBoostingFactors($this->getBoostingFactorArray());
         $this->scoreCalculationModel->recalculateScore();
@@ -56,7 +40,7 @@ class ConfigurableCalculationsTest extends AbstractCalculationsTestCase
         $scores = [];
 
         foreach (['configurable1', 'configurable2'] as $sku) {
-            $product = $this->productRepository->get($sku);
+            $product = $this->productRepository->get($sku, false, null, true);
 
             $scores[$sku] = [
                 'bestseller_score_by_amount' => $product->getData('bestseller_score_by_amount'),
@@ -72,10 +56,5 @@ class ConfigurableCalculationsTest extends AbstractCalculationsTestCase
         $this->assertEquals('19001', $scores['configurable2']['bestseller_score_by_amount']);
         $this->assertEquals('70000001', $scores['configurable2']['bestseller_score_by_turnover']);
         $this->assertEquals('601', $scores['configurable2']['bestseller_score_by_sale']);
-    }
-
-    public static function loadOrders()
-    {
-        include __DIR__ . '/../../_files/orders_with_configurable_products.php';
     }
 }

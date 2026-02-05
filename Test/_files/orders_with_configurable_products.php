@@ -1,10 +1,12 @@
 <?php
 
-require __DIR__ .'/product_configurable.php';
+declare(strict_types=1);
+
+require __DIR__ . '/product_configurable.php';
 
 $objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-$productRepository = $objectManager->create(\Magento\Catalog\Api\ProductRepositoryInterface::class);
-$orderCreator = $objectManager->create(\MageSuite\ProductBestsellersRanking\Test\Helper\OrderCreator::class);
+$productRepository = $objectManager->get(\Magento\Catalog\Api\ProductRepositoryInterface::class);
+$orderCreator = $objectManager->get(\MageSuite\ProductBestsellersRanking\Test\Helper\OrderCreator::class);
 
 $orders = [
     1000001 => [

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace MageSuite\ProductBestsellersRanking\Test\Integration\Model;
 
 /**
@@ -8,46 +10,28 @@ namespace MageSuite\ProductBestsellersRanking\Test\Integration\Model;
  */
 class GroupedCalculationsTest extends AbstractCalculationsTestCase
 {
-    /**
-     * @var \MageSuite\ProductBestsellersRanking\Model\ScoreCalculation
-     */
-    protected $scoreCalculationModel;
-
-    /**
-     * @var \MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider
-     */
-    protected $boostingFactorDataProvider;
-
-    /**
-     * @var \Magento\Catalog\Api\ProductRepositoryInterface
-     */
-    protected $productRepository;
-
-    /**
-     * @var \Magento\Framework\ObjectManagerInterface
-     */
-    protected $objectManager;
-
-    /**
-     * @var \MageSuite\ProductBestsellersRanking\Model\MoveCalculationsToAttributes|\PHPUnit\Framework\MockObject\MockObject
-     */
-    protected $moveCalculationsToAttributeMock;
+    protected ?\Magento\Framework\ObjectManagerInterface $objectManager;
+    protected ?\MageSuite\ProductBestsellersRanking\Model\ScoreCalculation $scoreCalculationModel;
+    protected ?\MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider $boostingFactorDataProvider;
+    protected ?\Magento\Catalog\Api\ProductRepositoryInterface $productRepository;
+    protected ?\PHPUnit\Framework\MockObject\MockObject $moveCalculationsToAttributeMock;
 
     public function setUp(): void
     {
         $this->objectManager = \Magento\TestFramework\Helper\Bootstrap::getObjectManager();
-        $this->scoreCalculationModel = $this->objectManager->create(\MageSuite\ProductBestsellersRanking\Model\ScoreCalculation::class);
+
+        $this->scoreCalculationModel = $this->objectManager->get(\MageSuite\ProductBestsellersRanking\Model\ScoreCalculation::class);
         $this->boostingFactorDataProvider = $this->objectManager->get(\MageSuite\ProductBestsellersRanking\DataProviders\BoostingFactorDataProvider::class);
-        $this->productRepository = $this->objectManager->create(\Magento\Catalog\Api\ProductRepositoryInterface::class);
+        $this->productRepository = $this->objectManager->get(\Magento\Catalog\Api\ProductRepositoryInterface::class);
     }
 
     /**
      * @magentoDbIsolation enabled
      * @magentoAppIsolation enabled
-     * @magentoDataFixture loadGroupedProducts
-     * @magentoDataFixture loadGroupedOrders
+     * @magentoDataFixture MageSuite_ProductBestsellersRanking::Test/_files/product_grouped_with_simple.php
+     * @magentoDataFixture MageSuite_ProductBestsellersRanking::Test/_files/orders_with_grouped_product.php
      */
-    public function testItCalculatesProperlyGroupedProductsScores()
+    public function testItCalculatesProperlyGroupedProductsScores(): void
     {
         $this->boostingFactorDataProvider->setBoostingFactors($this->getBoostingFactorArray());
         $this->scoreCalculationModel->recalculateScore();
@@ -61,14 +45,5 @@ class GroupedCalculationsTest extends AbstractCalculationsTestCase
         $this->assertEquals(array_sum($bestsellerScoreByAmount)+1, $product->getBestsellerScoreByAmount());
         $this->assertEquals(array_sum($bestsellerScoreByTurnover)+1, $product->getBestsellerScoreByTurnover());
         $this->assertEquals(array_sum($bestsellerScoreBySale)+1, $product->getBestsellerScoreBySale());
-    }
-    public static function loadGroupedProducts()
-    {
-        include __DIR__.'/../../_files/product_grouped_with_simple.php';
-    }
-
-    public static function loadGroupedOrders()
-    {
-        include __DIR__.'/../../_files/orders_with_grouped_product.php';
     }
 }
