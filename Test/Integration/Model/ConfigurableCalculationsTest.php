@@ -40,7 +40,7 @@ class ConfigurableCalculationsTest extends AbstractCalculationsTestCase
         $scores = [];
 
         foreach (['configurable1', 'configurable2'] as $sku) {
-            $product = $this->productRepository->get($sku, false, null, true);
+            $product = $this->productRepository->get($sku, false, 0, true);
 
             $scores[$sku] = [
                 'bestseller_score_by_amount' => $product->getData('bestseller_score_by_amount'),

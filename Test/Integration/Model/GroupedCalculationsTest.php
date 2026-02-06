@@ -35,7 +35,7 @@ class GroupedCalculationsTest extends AbstractCalculationsTestCase
         $this->boostingFactorDataProvider->setBoostingFactors($this->getBoostingFactorArray());
         $this->scoreCalculationModel->recalculateScore();
 
-        $product = $this->productRepository->get('grouped');
+        $product = $this->productRepository->get('grouped', false, 0, true);
 
         $bestsellerScoreByAmount = [6000, 5700, 5400, 4800];
         $bestsellerScoreByTurnover = [3000000, 2850000, 2700000, 2400000];

@@ -37,7 +37,7 @@ class BundleCalculationsTest extends AbstractCalculationsTestCase
         $scores = [];
 
         foreach (['bundle-product'] as $sku) {
-            $product = $this->productRepository->get($sku);
+            $product = $this->productRepository->get($sku, false, 0, true);
 
             $scores[$sku] = [
                 'bestseller_score_by_amount' => $product->getData('bestseller_score_by_amount'),
