@@ -110,7 +110,7 @@ foreach ($configurableProductsSkus as $configurableProductSku => $configurablePr
 
         $objectManager->get(\Magento\Framework\Indexer\IndexerRegistry::class)
             ->get(\Magento\CatalogInventory\Model\Indexer\Stock\Processor::INDEXER_ID)
-            ->reindexAll();
+            ->reindexRow($productToDelete->getId());
     } catch (\Exception $e) {
         // Nothing to remove
     }
